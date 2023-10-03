@@ -12,8 +12,8 @@ function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
     # LIF neuron parameters
     τ_m = 10.0       
     V_thresh = -50.0  
-    V_reset = -65.0   
-    V_rest = -65.0    
+    V_reset = -75.0   
+    V_rest = -75.0    
     R_m = 10.0         
     
     # Simulation parameters
@@ -69,7 +69,7 @@ end
 # Plotting function
 function plot_LIF_simulation(time, Vs, spike_times, S_input, filename)
     
-    p1 = plot(time, Vs, lw=2, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-70, -40), legend=:topright, legendfontsize=8, title="LIF Neuron Spiking Activity", linecolor=:blue)
+    p1 = plot(time, Vs, lw=2, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-80, -40), legend=:topright, legendfontsize=8, title="LIF Neuron Spiking Activity", linecolor=:blue)
     scatter!(spike_times, fill(-50, length(spike_times)), markershape=:circle, color="red", label="Spikes", ms=4)
     
     p2 = plot(time, S_input, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
@@ -83,19 +83,56 @@ function plot_LIF_simulation(time, Vs, spike_times, S_input, filename)
 end
 
 # Example usage
-A = 10.0        # fixed parameter A
+A = 20.0        # fixed parameter A
 d = 0.5         # depression fraction upon a spike
 f = 0.2         # facilitation increment upon a spike
 tau_d = 5.0     # time constant for D to recover to 1 (ms)
 tau_f = 5.0    # time constant for F to recover to 1 (ms)
 dt = 1.0        # time step (ms)
-T = 100.0       # total time to simulate (ms)
+T = 600.0       # total time to simulate (ms)
 
-# Spike train
-S_input = zeros(Int, convert(Int, T/dt) + 1)
-S_input[convert(Int, 35/dt)] = 1
-S_input[convert(Int, 45/dt)] = 1
-S_input[convert(Int, 55/dt)] = 1
+function generate_spike_train(T, dt, initial_spike_time, tf)
+    # T: total simulation time
+    # dt: time step
+    # initial_spike_time: time for the first spike
+    # tf: temporal frequency, indicating how often a spike appears in the train
+    
+    # Calculate the number of time steps
+    num_steps = convert(Int, T/dt) + 1
+    
+    # Initialize the spike train with all zeros
+    S_input = zeros(Int, num_steps)
+    
+    # Set the initial spike
+    S_input[convert(Int, initial_spike_time/dt)] = 1
+    
+    # Calculate the time interval between spikes based on the temporal frequency
+    spike_interval = convert(Int, 1000/tf)
+    
+    # Generate following spikes at evenly spaced intervals
+    for i in 2:5  # since the first spike is already set, we generate the next 4 spikes
+        next_spike_time = initial_spike_time + (i-1)*spike_interval
+        if next_spike_time <= T  # only set spike if it is within the total time T
+            S_input[convert(Int, next_spike_time/dt)] = 1
+        end
+    end
+    
+    return S_input
+end
+
+# Example usage
+A = 20.0        # fixed parameter A
+d = 0.5         # depression fraction upon a spike
+f = 0.2         # facilitation increment upon a spike
+tau_d = 5.0     # time constant for D to recover to 1 (ms)
+tau_f = 5.0     # time constant for F to recover to 1 (ms)
+dt = 1.0        # time step (ms)
+T = 600.0       # total time to simulate (ms)
+
+# Generate spike train
+initial_spike_time = 50  # time for the first spike (ms)
+tf = 10.0  # temporal frequency (Hz)
+S_input = generate_spike_train(T, dt, initial_spike_time, tf)
 
 # Run simulation
 time, Vs, spike_times = simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)

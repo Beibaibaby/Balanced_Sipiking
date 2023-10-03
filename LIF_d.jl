@@ -7,6 +7,12 @@ const V_reset = -65.0    # reset potential (mV)
 const V_rest = -65.0     # resting potential (mV)
 const R_m = 10.0         # membrane resistance (MΩ)
 
+# Synaptic weight parameters
+const A = 10.0          # fixed parameter A
+const F = 1.0           # fixed parameter F
+const d = 0.5           # depression fraction upon a spike
+const tau_d = 5.0      # time constant for D to recover to 1 (ms)
+
 # Simulation parameters
 const dt = 1.0          # time step (ms)
 const T = 100.0          # total time to simulate (ms)
@@ -16,27 +22,38 @@ const time = 0:dt:T      # time vector
 V = V_rest               # membrane potential
 Vs = Float64[]           # membrane potential at each time step
 spike_times = []         # vector to record spike times
-I_e = zeros(length(time)) # external input current (nA) (kept zero)
-W = 50.0                # synaptic weight (mV)
 S = zeros(length(time))  # spike train
+D = 1.0                  # dynamic variable D
 
-# Generate an artificial spike train: Spikes at 35 ms and 55 ms
+# Generate an artificial spike train: Spikes at 35 ms, 45 ms, and 55 ms
 S[convert(Int, 35/dt)] = 1
 S[convert(Int, 45/dt)] = 1
 S[convert(Int, 55/dt)] = 1
 
 # Main simulation loop
 for (idx, t) in enumerate(time)
-    global V
-
+    global V, D
+    
+    # Update synaptic weight W
+    W = A * D * F
+    
     # LIF equation with synaptic weight
-    dV = (-(V - V_rest) + R_m * I_e[idx] + W * S[idx]) / τ_m
+    dV = (-(V - V_rest) + R_m * W * S[idx]) / τ_m
     V += dV * dt
-
+    
     # Check for spike
     if V >= V_thresh
         push!(spike_times, t)
         V = V_reset
+    end
+    
+    # Update D
+    if S[idx] == 1
+        D *= d  # Depression upon spike
+    else
+        # Recovery towards 1 when no spike
+        dD = (1 - D) / tau_d
+        D += dD * dt
     end
     
     push!(Vs, V)
@@ -54,4 +71,4 @@ title!("Input Spike Train")
 plot(p1, p2, layout=(2,1), link=:x)
 
 # Save the plot
-savefig("./figs/LIF_spiking_activity_with_synaptic_weight.png")
+savefig("./figs/only_d.png")

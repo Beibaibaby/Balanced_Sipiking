@@ -1,44 +1,117 @@
 using Plots
 
-# Define epochs and initialize arrays for the ranks
-epochs = 1:2000
-approx_rank = zeros(length(epochs))
-actual_rank = zeros(length(epochs))
+function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
+    τ_m = 10.0       
+    V_thresh = -50.0  
+    V_reset = -75.0   
+    V_rest = -75.0    
+    R_m = 10.0        
 
-# Define parameters
-initial_approx_rank = 300
-final_approx_rank = 10
-half_life_approx = 80  # This determines how quickly the approx rank decreases initially
-noise_level_approx = 12
+    time = 0:dt:T      
 
-initial_actual_rank = 350
-final_actual_rank = 240
-half_life_actual = 200
-noise_level_actual = 4
+    V = V_rest                
+    Vs = Float64[]           
+    spike_times = []         
+    D = 1.0                  
+    F = 1.0                  
+    Hs = Float64[] 
 
-# Generate approximate rank: Exponential decrease from 300 to 70 by epoch 500 with noise, then remains around 70
-decay_rate_approx = log(2) / half_life_approx
-approx_rank[1:500] .= initial_approx_rank .* 
-                     exp.(-decay_rate_approx .* epochs[1:500]) .+ 
-                     noise_level_approx .* randn(500)
-approx_rank[501:end] .= final_approx_rank .+ 2.2 .* randn(length(epochs[501:end]))
+    prev_V = V 
+    spike_count = 0  
 
-# Generate actual rank: Exponential decrease from 300 to 250 by epoch 120, then stays at 250
-decay_rate_actual = log(2) / half_life_actual
-actual_rank[1:120] .= initial_actual_rank .* 
-                     exp.(-decay_rate_actual .* epochs[1:120]) .+ 
-                     noise_level_actual .* randn(120)
-actual_rank[121:end] .= final_actual_rank .+ 1 .* randn(length(epochs[121:end]))
+    for (idx, t) in enumerate(time)
+        W = A * D * F
+        dV = (-(V - V_rest) + R_m * W * S_input[idx]) / τ_m
+        V += dV * dt
 
-# Create the plot
-plot(epochs, [approx_rank, actual_rank],
-    label = ["Approximate Rank" "Actual Rank"],
-    color = [:blue :red],
-    xlabel = "Epochs",
-    ylabel = "Rank",
-    title = "Approximate vs Actual Rank over Epochs",
-    lw = 2,  # Line width
-    legend = :bottomright)
+        if S_input[idx] == 1
+            spike_count += 1
+            if spike_count == 1 || spike_count == 5
+                # Record the change in potential due to the input spike
+                push!(Hs, V - prev_V)
+            end
+            D *= d  
+            F += f  
+        end
 
-# Save the plot as a PNG file
-savefig("rank_plot.png")
+        dD = (1 - D) / tau_d
+        D += dD * dt
+    
+        dF = (1 - F) / tau_f
+        F += dF * dt
+        
+        prev_V = V
+        push!(Vs, V)
+    end
+    
+    return time, Vs, spike_times, Hs
+end
+
+
+function plot_LIF_simulation(time, Vs, spike_times, S_input, filename)
+    p1 = plot(time, Vs, lw=2, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-80, -40), legend=:topright, legendfontsize=8, title="LIF Neuron Spiking Activity", linecolor=:blue)
+    scatter!(spike_times, fill(-50, length(spike_times)), markershape=:circle, color="red", label="Spikes", ms=4)
+    
+    p2 = plot(time, S_input, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
+    title!("Input Spike Train")
+
+    p = plot(p1, p2, layout=(2,1), link=:x, size=(800, 600))
+
+    savefig(p, filename)
+end
+
+
+function generate_spike_train(T, dt, initial_spike_time, tf)
+    # T: total simulation time
+    # dt: time step
+    # initial_spike_time: time for the first spike
+    # tf: temporal frequency, indicating how often a spike appears in the train
+    
+    # Calculate the number of time steps
+    num_steps = convert(Int, T/dt) + 1
+    
+    # Initialize the spike train with all zeros
+    S_input = zeros(Int, num_steps)
+    
+    # Set the initial spike
+    S_input[convert(Int, initial_spike_time/dt)] = 1
+    
+    # Calculate the time interval between spikes based on the temporal frequency
+    spike_interval = round(Int, 1000/tf)
+    
+    # Generate following spikes at evenly spaced intervals
+    for i in 2:5  # since the first spike is already set, we generate the next 4 spikes
+        next_spike_time = initial_spike_time + (i-1)*spike_interval
+        if next_spike_time <= T  # only set spike if it is within the total time T
+            S_input[convert(Int, next_spike_time/dt)] = 1
+        end
+    end
+    
+    return S_input
+end
+
+# Example usage
+A = 20.0        # fixed parameter A
+d = 0.28       # depression fraction upon a spike
+f = 0.085         # facilitation increment upon a spike
+tau_d = 50.0     # time constant for D to recover to 1 (ms)
+tau_f = 96.0     # time constant for F to recover to 1 (ms)
+dt = 1.0        # time step (ms)
+T = 200.0       # total time to simulate (ms)
+
+# Generate spike train
+first_spike_time = 50.0  # ms
+temporal_frequency = 50.0  # Hz
+S_input = generate_spike_train(T, dt, first_spike_time, temporal_frequency)
+
+# Run simulation
+time, Vs, spike_times, Hs = simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
+
+# Calculate depression ratio H_5/H_1
+depression_ratio = Hs[2] / Hs[1]
+println("Depression ratio H_5/H_1: ", depression_ratio)
+
+
+# Plot results and save to file
+output_filename = "./figs/tf=50.png"
+plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)

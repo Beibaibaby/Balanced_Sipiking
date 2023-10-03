@@ -92,7 +92,7 @@ end
 
 # Example usage
 A = 20.0        # fixed parameter A
-d = 0.515       # depression fraction upon a spike
+d = 0.28       # depression fraction upon a spike
 f = 0.085         # facilitation increment upon a spike
 tau_d = 50.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
@@ -101,7 +101,7 @@ T = 3000.0       # total time to simulate (ms)
 
 # Generate spike train
 first_spike_time = 50.0  # ms
-temporal_frequency = 50.0  # Hz
+temporal_frequency = 80.0  # Hz
 S_input = generate_spike_train(T, dt, first_spike_time, temporal_frequency)
 
 # Run simulation
@@ -119,8 +119,8 @@ plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)
 using Plots
 
 # Example temporal_frequencies
-temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25, 30,35, 40, 45, 50]
-
+temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20]
+#temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25, 30,35, 40]
 # Initialize an empty array to store results
 depression_ratios = []
 

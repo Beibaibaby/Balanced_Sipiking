@@ -1,57 +1,117 @@
 using Plots
 
-# LIF neuron parameters
-const τ_m = 10.0        # membrane time constant (ms)
-const V_thresh = -50.0   # spike threshold (mV)
-const V_reset = -65.0    # reset potential (mV)
-const V_rest = -65.0     # resting potential (mV)
-const R_m = 10.0         # membrane resistance (MΩ)
+function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
+    τ_m = 10.0       
+    V_thresh = -50.0  
+    V_reset = -75.0   
+    V_rest = -75.0    
+    R_m = 10.0        
 
-# Simulation parameters
-const dt = 1.0          # time step (ms)
-const T = 100.0          # total time to simulate (ms)
-const time = 0:dt:T      # time vector
+    time = 0:dt:T      
 
-# Initialize variables
-V = V_rest               # membrane potential
-Vs = Float64[]           # membrane potential at each time step
-spike_times = []         # vector to record spike times
-I_e = zeros(length(time)) # external input current (nA) (kept zero)
-W = 50.0                # synaptic weight (mV)
-S = zeros(length(time))  # spike train
+    V = V_rest                
+    Vs = Float64[]           
+    spike_times = []         
+    D = 1.0                  
+    F = 1.0                  
+    Hs = Float64[] 
 
-# Generate an artificial spike train: Spikes at 35 ms and 55 ms
-S[convert(Int, 35/dt)] = 1
-S[convert(Int, 45/dt)] = 1
-S[convert(Int, 55/dt)] = 1
+    prev_V = V 
+    spike_count = 0  
 
-# Main simulation loop
-for (idx, t) in enumerate(time)
-    global V
+    for (idx, t) in enumerate(time)
+        W = A * D * F
+        dV = (-(V - V_rest) + R_m * W * S_input[idx]) / τ_m
+        V += dV * dt
 
-    # LIF equation with synaptic weight
-    dV = (-(V - V_rest) + R_m * I_e[idx] + W * S[idx]) / τ_m
-    V += dV * dt
+        if S_input[idx] == 1
+            spike_count += 1
+            if spike_count == 1 || spike_count == 5
+                # Record the change in potential due to the input spike
+                push!(Hs, V - prev_V)
+            end
+            D *= d  
+            F += f  
+        end
 
-    # Check for spike
-    if V >= V_thresh
-        push!(spike_times, t)
-        V = V_reset
+        dD = (1 - D) / tau_d
+        D += dD * dt
+    
+        dF = (1 - F) / tau_f
+        F += dF * dt
+        
+        prev_V = V
+        push!(Vs, V)
     end
     
-    push!(Vs, V)
+    return time, Vs, spike_times, Hs
 end
 
-# Plotting
-p1 = plot(time, Vs, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-70, -40), legend=:topright, legendfontsize=8)
-scatter!(spike_times, V_thresh*ones(length(spike_times)), markershape=:circle, color="red", label="Spikes")
-title!("LIF Neuron Spiking Activity")
 
-p2 = plot(time, S, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
-title!("Input Spike Train")
+function plot_LIF_simulation(time, Vs, spike_times, S_input, filename)
+    p1 = plot(time, Vs, lw=2, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-80, -40), legend=:topright, legendfontsize=8, title="LIF Neuron Spiking Activity", linecolor=:blue)
+    scatter!(spike_times, fill(-50, length(spike_times)), markershape=:circle, color="red", label="Spikes", ms=4)
+    
+    p2 = plot(time, S_input, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
+    title!("Input Spike Train")
 
-# Combine the plots vertically
-plot(p1, p2, layout=(2,1), link=:x)
+    p = plot(p1, p2, layout=(2,1), link=:x, size=(800, 600))
 
-# Save the plot
-savefig("./figs/LIF_spiking_activity_with_synaptic_weight.png")
+    savefig(p, filename)
+end
+
+
+function generate_spike_train(T, dt, initial_spike_time, tf)
+    # T: total simulation time
+    # dt: time step
+    # initial_spike_time: time for the first spike
+    # tf: temporal frequency, indicating how often a spike appears in the train
+    
+    # Calculate the number of time steps
+    num_steps = convert(Int, T/dt) + 1
+    
+    # Initialize the spike train with all zeros
+    S_input = zeros(Int, num_steps)
+    
+    # Set the initial spike
+    S_input[convert(Int, initial_spike_time/dt)] = 1
+    
+    # Calculate the time interval between spikes based on the temporal frequency
+    spike_interval = convert(Int, 1000/tf)
+    
+    # Generate following spikes at evenly spaced intervals
+    for i in 2:5  # since the first spike is already set, we generate the next 4 spikes
+        next_spike_time = initial_spike_time + (i-1)*spike_interval
+        if next_spike_time <= T  # only set spike if it is within the total time T
+            S_input[convert(Int, next_spike_time/dt)] = 1
+        end
+    end
+    
+    return S_input
+end
+
+# Example usage
+A = 20.0        # fixed parameter A
+d = 0.5         # depression fraction upon a spike
+f = 0.3         # facilitation increment upon a spike
+tau_d = 150.0     # time constant for D to recover to 1 (ms)
+tau_f = 150.0     # time constant for F to recover to 1 (ms)
+dt = 1.0        # time step (ms)
+T = 600.0       # total time to simulate (ms)
+
+# Generate spike train
+first_spike_time = 50.0  # ms
+temporal_frequency = 10.0  # Hz
+S_input = generate_spike_train(T, dt, first_spike_time, temporal_frequency)
+
+# Run simulation
+time, Vs, spike_times, Hs = simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
+
+# Calculate depression ratio H_5/H_1
+depression_ratio = Hs[2] / Hs[1]
+println("Depression ratio H_5/H_1: ", depression_ratio)
+
+
+# Plot results and save to file
+output_filename = "./figs/working.png"
+plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)

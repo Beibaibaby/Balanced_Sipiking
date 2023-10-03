@@ -9,9 +9,10 @@ const R_m = 10.0         # membrane resistance (MΩ)
 
 # Synaptic weight parameters
 const A = 10.0          # fixed parameter A
-const F = 1.0           # fixed parameter F
 const d = 0.5           # depression fraction upon a spike
-const tau_d = 5.0      # time constant for D to recover to 1 (ms)
+const f = 0.1           # facilitation increment upon a spike
+const tau_d = 5.0       # time constant for D to recover to 1 (ms)
+const tau_f = 5.0      # time constant for F to recover to 1 (ms)
 
 # Simulation parameters
 const dt = 1.0          # time step (ms)
@@ -24,6 +25,7 @@ Vs = Float64[]           # membrane potential at each time step
 spike_times = []         # vector to record spike times
 S = zeros(length(time))  # spike train
 D = 1.0                  # dynamic variable D
+F = 1.0                  # dynamic variable F
 
 # Generate an artificial spike train: Spikes at 35 ms, 45 ms, and 55 ms
 S[convert(Int, 35/dt)] = 1
@@ -32,29 +34,33 @@ S[convert(Int, 55/dt)] = 1
 
 # Main simulation loop
 for (idx, t) in enumerate(time)
-    global V, D
-    
-    # Update synaptic weight W
+    global V, D, F
+
+    # Compute the synaptic weight
     W = A * D * F
     
     # LIF equation with synaptic weight
     dV = (-(V - V_rest) + R_m * W * S[idx]) / τ_m
     V += dV * dt
-    
+
     # Check for spike
     if V >= V_thresh
         push!(spike_times, t)
         V = V_reset
     end
     
-    # Update D
+    # Update D and F on spike occurrence in input spike train
     if S[idx] == 1
-        D *= d  # Depression upon spike
-    else
-        # Recovery towards 1 when no spike
-        dD = (1 - D) / tau_d
-        D += dD * dt
+        D *= d  # depression of D
+        F += f  # facilitation of F
     end
+
+    # Recover D and F to 1 with exponential dynamics
+    dD = (1 - D) / tau_d
+    D += dD * dt
+
+    dF = (1 - F) / tau_f
+    F += dF * dt
     
     push!(Vs, V)
 end
@@ -71,4 +77,4 @@ title!("Input Spike Train")
 plot(p1, p2, layout=(2,1), link=:x)
 
 # Save the plot
-savefig("./figs/only_d.png")
+savefig("d_f.png")

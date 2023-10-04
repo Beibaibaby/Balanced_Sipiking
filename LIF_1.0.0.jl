@@ -91,10 +91,20 @@ function generate_spike_train(T, dt, initial_spike_time, tf)
 end
 
 # Example usage
+#A = 20.0        # fixed parameter A
+#d = 0.23       # depression fraction upon a spike
+#f = 0.083         # facilitation increment upon a spike
+#tau_d = 52.0     # time constant for D to recover to 1 (ms)
+#tau_f = 96.0     # time constant for F to recover to 1 (ms)
+#dt = 1.0        # time step (ms)
+#T = 3000.0       # total time to simulate (ms)
+#Old parameters above
+
+# Example usage
 A = 20.0        # fixed parameter A
-d = 0.23       # depression fraction upon a spike
-f = 0.083         # facilitation increment upon a spike
-tau_d = 52.0     # time constant for D to recover to 1 (ms)
+d = 0.15       # depression fraction upon a spike
+f = 0.92         # facilitation increment upon a spike
+tau_d = 103.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
 dt = 1.0        # time step (ms)
 T = 3000.0       # total time to simulate (ms)

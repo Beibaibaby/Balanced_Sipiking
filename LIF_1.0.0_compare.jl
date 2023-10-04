@@ -206,8 +206,8 @@ end
 
 # Plot results
 using Plots
-plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", ylabel="Depression Ratio", label="With Facilitation", marker=:circle, linewidth=2, linecolor=:blue)
-plot!(temporal_frequencies, depression_ratios_fixed_F, label="No Facilitation", marker=:circle, linewidth=2, linecolor=:red)
+plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", ylabel="Depression Ratio", label="With Facilitation", marker=:circle, markercolor=:orange,linewidth=2, linecolor=:orange)
+plot!(temporal_frequencies, depression_ratios_fixed_F, label="No Facilitation", marker=:circle, linewidth=2, linecolor=:purple,markercolor=:purple)
 
 # Save figure
 savefig("depression_ratio_vs_temporal_frequency_compare.png")

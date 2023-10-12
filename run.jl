@@ -22,30 +22,30 @@ end
 doplot = true
 
 include("network.jl")
+include("sim.jl")
 K = 800
 Ne = 4000 #Ne is the Number of E cells
 Ni = 1000 #Ni is the Number of I cells
-T =  1500 #T is the simulation time (ms)
+T =  1000 #T is the simulation time (ms)
 sqrtK = sqrt(K) 
 taue = 10 #membrane time constant for exc. neurons (ms)
 taui = 15 #membrane time constant for inh. neurons (ms)
 
-jie = 0.2 / (taui*sqrtK)        #strength from E to I
-jee = 0.4 / (taue*sqrtK)        #strength from E to E 
+jie = 4. / (taui*sqrtK)        #strength from E to I
+jee = 10. / (taue*sqrtK)        #strength from E to E 
 
-jei = -0.8 * 1.2 /(taue*sqrtK)      #strength from I to E
-jii = -0.8 / (taui*sqrtK)      #strength from I to I 
-
+jei = -16. * 1.2 /(taue*sqrtK)      #strength from I to E
+jii = -16. / (taui*sqrtK)      #strength from I to I 
 
 #times, ns, Ne, Ncells, T = sim(K,Ne,Ni,T,jie,jei,jii,jee)
 
 #println("mean excitatory firing rate: ", mean(1000 * ns[1:Ne] / T), " Hz")
 #println("mean inhibitory firing rate: ", mean(1000 * ns[(Ne+1):Ncells] / T), " Hz")
 
-params = NetworkParameters(800, 4000, 1000, 1500, sqrt(800), 10, 15, 0.2 / (15 * sqrt(800)), 0.4 / (10 * sqrt(800)), -0.8 * 1.2 / (10 * sqrt(800)), -0.8 / (15 * sqrt(800)))
-
-times, ns, Ne, Ncells, T = sim(params.K, params.Ne, params.Ni, params.T, params.jie, params.jei, params.jii, params.jee)
-
+#params = NetworkParameters(800, 4000, 1000, 1500, sqrt(800), 10, 15, 0.2 / (15 * sqrt(800)), 0.4 / (10 * sqrt(800)), -0.8 * 1.2 / (10 * sqrt(800)), -0.8 / (15 * sqrt(800)))
+params = NetworkParameters(K, Ne, Ni, T, sqrtK, taue, taui, jie, jee, jei, jii)
+#times, ns, Ne, Ncells, T = sim(params.K, params.Ne, params.Ni, params.T, params.jie, params.jei, params.jii, params.jee)
+times, ns, Ne, Ncells, T = sim_new()
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
 
@@ -95,7 +95,7 @@ time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
 
 p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)",
           label="Excitatory", lw=2, linecolor=:red, size=plot_size)
-plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:skyblue)
+plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
 
 fig_filename = "./figs/$timestamp_str.png"
 
@@ -244,4 +244,4 @@ function tune_parameters()
 end
 
 
-tune_parameters()
+#tune_parameters()

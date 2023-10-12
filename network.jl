@@ -15,7 +15,7 @@ function sim(K,Ne,Ni,T,jie,jei,jii,jee)
 
 	#stimulation
 	Nstim = Ncells #number of neurons to stimulate (indices 1 to Nstim will be stimulated)
-	stimstr = 0 #0/taue
+	stimstr = 0.02/taue
 	stimstart = T-500
 	stimend = T 
 

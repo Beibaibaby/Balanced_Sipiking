@@ -45,7 +45,7 @@ jii = -16. / (taui*sqrtK)      #strength from I to I
 #params = NetworkParameters(800, 4000, 1000, 1500, sqrt(800), 10, 15, 0.2 / (15 * sqrt(800)), 0.4 / (10 * sqrt(800)), -0.8 * 1.2 / (10 * sqrt(800)), -0.8 / (15 * sqrt(800)))
 params = NetworkParameters(K, Ne, Ni, T, sqrtK, taue, taui, jie, jee, jei, jii)
 #times, ns, Ne, Ncells, T = sim(params.K, params.Ne, params.Ni, params.T, params.jie, params.jei, params.jii, params.jee)
-times, ns, Ne, Ncells, T = sim_new()
+times, ns, Ne, Ncells, T = sim_old()
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
 

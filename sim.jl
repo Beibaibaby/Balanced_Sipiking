@@ -8,10 +8,10 @@ function sim_old()
     Ncells = 5000
     Ne = 4000
     Ni = 1000
-    T = 500  # Simulation time (ms)
+    T = 1000  # Simulation time (ms)
 
     taue = 15  # Membrane time constant for excitatory neurons (ms)
-    taui = 10
+    taui = 10 # Membrane time constant for I neurons (ms)
 
     # Connection probabilities
     pei = 0.5  # I -> E
@@ -96,6 +96,7 @@ function sim_old()
     xidecay = zeros(Ncells)
 
     v = rand(Ncells)
+    #v = vre*ones(Ncells)
     lastSpike = -100 * ones(Ncells)
 
     Nsteps = round(Int, T / dt)
@@ -119,8 +120,9 @@ function sim_old()
             end
 
             if t > (lastSpike[ci] + refrac)
-                v[ci] += dt * ((1 / tau[ci]) * (mu[ci] - v[ci]) + synInput)
 
+                v[ci] += dt * ((1 / tau[ci]) * (mu[ci] - v[ci]) + synInput)
+       
                 if v[ci] > thresh[ci]
                     v[ci] = vre
                     lastSpike[ci] = t
@@ -145,10 +147,21 @@ function sim_old()
     end
 
     print("\r")
-    times = times[:, 1:maximum(ns)]
+    println(maximum(ns))
+    println(maximum(ns))
+    if maximum(ns)<=maxTimes
+         times = times[:, 1:maximum(ns)]
+    else
+       println("triger")
+    end
 
     return times, ns, Ne, Ncells, T
 end
+
+
+
+
+
 
 function sim_new()
     println("Setting up parameters")

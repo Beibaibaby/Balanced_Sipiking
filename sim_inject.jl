@@ -33,7 +33,7 @@ function sim_old()
 
     # Stimulation
     Nstim = 400
-    stimstr = 0#0.7 / taue
+    stimstr = 0 #0.1/taue #0.7 / taue
     stimstart = T - 1100
     stimend = T
 

@@ -10,7 +10,7 @@ include("sim_inject_1.0.0.jl")
 #plot or not
 doplot = true
 do_v_corr = true
-do_repeat_v_corr=false
+do_repeat_v_corr=true
 
 #Setting the parameters
 ###################################################
@@ -80,8 +80,9 @@ plot_size = (600, 400)
 window_size = 100  # in ms
 step_size = 5     # in ms
 
-e_rate = compute_sliding_rate(times[1:Ne, :], window_size, step_size, T)
-i_rate = compute_sliding_rate(times[(Ne+1):Ncells, :], window_size, step_size, T)
+#print(Ne)
+e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
+i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
 # Compute the time values based on window_size and step_size
 n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
@@ -163,17 +164,16 @@ IPSP_IPSP_accumulator = zeros(100, 10000)
 
 if do_repeat_v_corr
 
-for _ in 1:50
-    # Assuming you've defined the NetworkParameters somewhere above
-    # params = NetworkParameters(K, Ne, Ni, T, sqrtK, taue, taui, jie, jee, jei, jii)
+for iter in 1:300
+    println("Current iteration: $iter")  # This line prints the current iteration number
     local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-    times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
+    times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
 
     EPSP_EPSP_pool = v_history[1:100, end-9999:end]
     TT_pool = v_history[501:600, end-9999:end]
     IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
     
-    IPSP_IPSP_pool = IPSP_IPSP_pool .- 2 
+    IPSP_IPSP_pool = IPSP_IPSP_pool .- 1 #hard?
     TT_pool = TT_pool .- 1
     EPSP_EPSP_pool = EPSP_EPSP_pool .+ 0.2
     

@@ -191,6 +191,7 @@ end
 function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para)
     println("Setting up parameters")
 
+
     # Network parameters
 
     Ncells = Ne+Ni
@@ -408,9 +409,10 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
     Ncells, Nsteps = size(E_input)
 
     # Ensure the number of pairs is less than or equal to Ncells
-    if num_pairs > Ncells
-        error("The number of pairs cannot exceed the number of cells.")
+    if num_pairs > Ncells * Ncells
+        error("The number of pairs cannot exceed the square of the number of cells.")
     end
+
 
     # Randomly select indices for both E_input and I_input
     random_e_indices = rand(1:Ncells, num_pairs)
@@ -991,7 +993,7 @@ function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, c
     xlabel!("Tau")
     ylabel!("Correlation")
     title!("Cross-correlation")
-    savefig("cross_correlation_plot_PSP_new_high.png")
+    savefig("cross_correlation_plot_PSP_new_mem.png")
     display(plot)
 end
 

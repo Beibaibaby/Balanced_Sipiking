@@ -188,6 +188,176 @@ function sim_old()
 end
 
 
+function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para)
+    println("Setting up parameters")
+
+    # Network parameters
+
+    Ncells = Ne+Ni
+    sqrtK = sqrt(K)
+
+    # Synaptic weights
+    jie = jie_para / (taui * sqrtK)
+    jei = jei_para / (taue * sqrtK)
+    jii = jii_para / (taui * sqrtK)
+    jee = jee_para / (taue * sqrtK)
+   
+
+    # Stimulation
+    stimstr = stimstr_para/taue 
+    stimstart = T - 1100
+    stimend = T
+
+    # Constants and thresholds
+    muemin = 1.1
+    muemax = 1.2
+    muimin = 1
+    muimax = 1.05
+
+    vre = 0.0
+    threshe = 1
+    threshi = 1
+
+    dt = 0.1
+    refrac = 5
+
+    tauerise = 1
+    taurise = 1
+    tauedecay = 3
+    tauidecay = 2
+
+    maxrate = 100  # Maximum average firing rate (Hz)
+
+    # Initialize parameters
+    mu = zeros(Ncells)
+    thresh = zeros(Ncells)
+    tau = zeros(Ncells)
+
+    mu[1:Ne] .= (muemax - muemin) .* rand(Ne) .+ muemin
+    mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
+
+    thresh[1:Ne] .= threshe
+    thresh[(Ne + 1):Ncells] .= threshi
+
+    tau[1:Ne] .= taue
+    tau[(Ne + 1):Ncells] .= taui
+
+    weights = zeros(Ncells, Ncells)
+
+    # Random connections
+    weights[1:Ne, 1:Ne] .= jee .* (rand(Ne, Ne) .< pee)
+    weights[1:Ne, (1 + Ne):Ncells] .= jei .* (rand(Ne, Ni) .< pei)
+    weights[(1 + Ne):Ncells, 1:Ne] .= jie .* (rand(Ni, Ne) .< pie)
+    weights[(1 + Ne):Ncells, (1 + Ne):Ncells] .= jii .* (rand(Ni, Ni) .< pii)
+
+    for ci = 1:Ncells
+        weights[ci, ci] = 0
+    end
+
+    maxTimes = round(Int, maxrate * T / 1000)
+    times = zeros(Ncells, maxTimes)
+    ns = zeros(Int, Ncells)
+    Nsteps = round(Int, T / dt)
+    v_history = zeros(Ncells, Nsteps)  # Nsteps because we're saving at each time step, not just spikes
+    E_input=zeros(Ncells, Nsteps) 
+    I_input=zeros(Ncells, Nsteps)
+    forwardInputsE = zeros(Ncells)
+    forwardInputsI = zeros(Ncells)
+    forwardInputsEPrev = zeros(Ncells)
+    forwardInputsIPrev = zeros(Ncells)
+
+    xerise = zeros(Ncells)
+    xedecay = zeros(Ncells)
+    xirise = zeros(Ncells)
+    xidecay = zeros(Ncells)
+
+    v = rand(Ncells)
+    v[1:3] .=0
+    #v = vre*ones(Ncells)
+    lastSpike = -100 * ones(Ncells)
+
+    
+    println("Starting simulation")
+    
+
+    corr_pairs=100
+    for ti = 1:Nsteps
+        t = dt * ti
+        forwardInputsE[:] .= 0
+        forwardInputsI[:] .= 0
+
+        for ci = 1:Ncells
+            xerise[ci] += -dt * xerise[ci] / tauerise + forwardInputsEPrev[ci]
+            xedecay[ci] += -dt * xedecay[ci] / tauedecay + forwardInputsEPrev[ci]
+            xirise[ci] += -dt * xirise[ci] / taurise + forwardInputsIPrev[ci]
+            xidecay[ci] += -dt * xidecay[ci] / tauidecay + forwardInputsIPrev[ci]
+
+            #synInput = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
+            synInput_E = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise)
+            synInput_I = (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
+            E_input[ci, ti] = synInput_E
+            I_input[ci, ti] = synInput_I 
+            synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
+            
+            if ci<corr_pairs
+                synInput=synInput_E-(mu[ci]+0.2)/tau[ci]
+                #synInput = synInput_E
+            end
+
+            if ci >= 500 && ci <600
+                synInput=synInput+(1-mu[ci])/tau[ci]
+            end
+
+            if ci >= 1001 && ci <1100
+                synInput=synInput_I+(2-mu[ci])/tau[ci]
+            end
+
+            if (ci < Nstim) && (t > stimstart) && (t < stimend)
+                synInput += stimstr
+            end
+           
+            if t > (lastSpike[ci] + refrac)
+                v[ci] += dt * ((1 / tau[ci]) * (mu[ci] - v[ci]) + synInput)     
+                v_history[ci, ti] = v[ci]
+                if v[ci] > thresh[ci]
+                    if (ci>=corr_pairs && ci<500 )||(ci>=600 && ci<=1000)  || ci>=1100
+                     v[ci] = vre
+                    end
+                    lastSpike[ci] = t
+                    ns[ci] += 1
+                    if ns[ci] <= maxTimes
+                        times[ci, ns[ci]] = t
+                    end
+
+                    for j = 1:Ncells
+                        if weights[j, ci] > 0  # E synapse
+                            forwardInputsE[j] += weights[j, ci]
+                        elseif weights[j, ci] < 0  # I synapse
+                            forwardInputsI[j] += weights[j, ci]
+                        end
+                    end
+                end
+            else
+                v_history[ci, ti] = v[ci]#
+            end
+        end
+
+        forwardInputsEPrev .= forwardInputsE
+        forwardInputsIPrev .= forwardInputsI
+    end
+
+    print("\r")
+    println(maximum(ns))
+    println(maximum(ns))
+    if maximum(ns)<=maxTimes
+         times = times[:, 1:maximum(ns)]
+    else
+       println("triger")
+    end
+
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights
+end
+
 
 
 
@@ -757,3 +927,81 @@ end
 
 
 #tune_parameters()
+
+function compute_sliding_rate(spiketimes, window_size, step_size, T)
+    n_neurons, _ = size(spiketimes)
+    n_steps = floor(Int, (T - window_size) / step_size) + 1
+    rates = zeros(n_steps)
+
+    for i = 1:n_steps
+        t_start = (i-1) * step_size + 1  # Ensure the start time is non-zero
+        t_end = t_start + window_size - 1  # Adjust end time based on start
+        
+        # Check for out-of-bounds
+        if t_end > T
+            break
+        end
+
+        n_spikes = sum([sum((t_start .<= spiketimes[j, :]) .& (spiketimes[j, :] .< t_end)) for j=1:n_neurons])
+        rates[i] = n_spikes / (n_neurons * window_size) * 1000  # rate in Hz
+    end
+    #println(rates)
+    return rates
+end
+
+function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
+    # Assuming the dictionaries have the same keys
+    sorted_keys = sort(collect(keys(cross_corr_E_E)))
+    
+    sorted_values_E_E = [cross_corr_E_E[k] for k in sorted_keys]
+    sorted_values_I_I = [cross_corr_I_I[k] for k in sorted_keys]
+    sorted_values_E_I = [cross_corr_E_I[k] for k in sorted_keys]
+    sorted_values_I_E = [cross_corr_I_E[k] for k in sorted_keys]
+
+    plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright)
+    plot!(sorted_keys, sorted_values_I_I, label="I-I", linewidth=2, marker=:circle, color=:red)
+    plot!(sorted_keys, sorted_values_E_I, label="E-I", linewidth=2, marker=:circle, color=:yellow)
+    plot!(sorted_keys, sorted_values_I_E, label="I-E", linewidth=2, marker=:circle, color=:orange)
+    
+    xlabel!("Tau")
+    ylabel!("Correlation")
+    title!("Cross-correlation")
+    savefig("cross_correlation_plot_PSP_new.png")
+    display(plot)
+end
+
+
+
+function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, cross_corr_E_I, cross_corr_I_E)
+    # Assuming the dictionaries have the same keys
+    sorted_keys = sort(collect(keys(cross_corr_E_E)))
+    
+    sorted_values_E_E = [cross_corr_E_E[k] for k in sorted_keys]
+    sorted_values_I_I = [cross_corr_I_I[k] for k in sorted_keys]
+    sorted_values_T_T = [cross_corr_T_T[k] for k in sorted_keys]
+    sorted_values_E_I = [cross_corr_E_I[k] for k in sorted_keys]
+    sorted_values_I_E = [cross_corr_I_E[k] for k in sorted_keys]
+
+    plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright)
+    plot!(sorted_keys, sorted_values_I_I, label="I-I", linewidth=2, marker=:circle, color=:red)
+    plot!(sorted_keys, sorted_values_E_I, label="E-I", linewidth=2, marker=:circle, color=:yellow)
+    plot!(sorted_keys, sorted_values_I_E, label="I-E", linewidth=2, marker=:circle, color=:orange)
+    plot!(sorted_keys, sorted_values_T_T, label="T-T", linewidth=2, marker=:circle, color=:green)
+
+    xlabel!("Tau")
+    ylabel!("Correlation")
+    title!("Cross-correlation")
+    savefig("cross_correlation_plot_PSP_new_high.png")
+    display(plot)
+end
+
+
+function plot_cells(v_history, cells)
+    p = plot(layout=(3,1), size=(600,800))
+
+    for (index, cell) in enumerate(cells)
+        plot!(p[index], v_history[cell, :], label="Cell $cell", xlabel="Time", ylabel="Voltage", legend=:topright)
+    end
+    savefig("v_history.png")
+    display(p)
+end

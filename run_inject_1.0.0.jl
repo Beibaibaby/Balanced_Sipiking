@@ -164,7 +164,8 @@ IPSP_IPSP_accumulator = zeros(100, 10000)
 
 if do_repeat_v_corr
 
-for iter in 1:300
+n_run=300
+for iter in 1:n_run
     println("Current iteration: $iter")  # This line prints the current iteration number
     local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
     times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
@@ -184,9 +185,9 @@ for iter in 1:300
 end
 
 # Compute the average
-EPSP_EPSP_avg = EPSP_EPSP_accumulator ./ 50
-TT_avg = TT_accumulator ./ 50
-IPSP_IPSP_avg = IPSP_IPSP_accumulator ./ 50
+EPSP_EPSP_avg = EPSP_EPSP_accumulator ./ n_run
+TT_avg = TT_accumulator ./ n_run
+IPSP_IPSP_avg = IPSP_IPSP_accumulator ./ n_run
 
 IPSP_IPSP_pool= EPSP_EPSP_avg
 TT_pool=TT_avg

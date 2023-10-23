@@ -993,7 +993,7 @@ function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, c
     xlabel!("Tau")
     ylabel!("Correlation")
     title!("Cross-correlation")
-    savefig("cross_correlation_plot_PSP_new_mem.png")
+    savefig("cross_correlation_plot_PSP_mem.png")
     display(plot)
 end
 

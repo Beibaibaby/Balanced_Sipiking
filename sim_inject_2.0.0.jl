@@ -2,6 +2,7 @@
 #Copyright (C) 2014 Ashok Litwin-Kumar
 #see README for more information
 using Statistics
+using ProgressMeter
 
 ##oldest version
 function sim_old()
@@ -361,7 +362,7 @@ function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 end
 
 ##oldest version + para setting+ E->I dyanmic 
-function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para)
+function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para)
     println("Setting up parameters")
 
 
@@ -381,6 +382,16 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
     stimstr = stimstr_para/taue 
     stimstart = T - 1100
     stimend = T
+
+    d = 0.15       # depression fraction upon a spike
+    f = 0.92         # facilitation increment upon a spike
+    #tau_d = 103.0     # time constant for D to recover to 1 (ms)
+    #tau_f = 96.0     # time constant for F to recover to 1 (ms)
+    
+    tau_d = 1030 # time constant for D to recover to 1 (step;not ms)
+    tau_f = 960 # time constant for D to recover to 1 (step;not ms)
+
+    #todo: might need adjust the time scale
 
     # Constants and thresholds
     muemin = 1.1
@@ -419,7 +430,7 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
     weights = zeros(Ncells, Ncells)
     weights_D = ones(Ncells) #the sending D
     weights_F = ones(Ncells) #the sending F
-
+    # Here we only need one decay/facilitation factor for one given neuron i, the factors from i to j are all the same
 
     # Random connections
     weights[1:Ne, 1:Ne] .= jee .* (rand(Ne, Ne) .< pee)
@@ -455,6 +466,7 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
 
     
     println("Starting simulation")
+    pl = Progress(Nsteps, 15)
     
 
     corr_pairs=100
@@ -462,13 +474,23 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
         t = dt * ti
         forwardInputsE[:] .= 0
         forwardInputsI[:] .= 0
+        
+        weights_D .+= (1 .- weights_D) ./ tau_d
+        weights_F .+= (1 .- weights_F) ./ tau_f
+
+
+        W_sub = weights[end-Ne+1:end, 1:Ne]
+        weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[end-Ne+1:end] .* weights_F[end-Ne+1:end])
+        
 
         for ci = 1:Ncells
+            
+
             xerise[ci] += -dt * xerise[ci] / tauerise + forwardInputsEPrev[ci]
             xedecay[ci] += -dt * xedecay[ci] / tauedecay + forwardInputsEPrev[ci]
             xirise[ci] += -dt * xirise[ci] / taurise + forwardInputsIPrev[ci]
             xidecay[ci] += -dt * xidecay[ci] / tauidecay + forwardInputsIPrev[ci]
-
+   
             #synInput = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             synInput_E = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise)
             synInput_I = (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
@@ -505,6 +527,11 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
                     if ns[ci] <= maxTimes
                         times[ci, ns[ci]] = t
                     end
+                    
+                   if ci <=Ne
+                    weights_D[ci] = d * weights_D[ci]
+                    weights_F[ci] = f + weights_F[ci]
+                   end                               
 
                     for j = 1:Ncells
                         if weights[j, ci] > 0  # E synapse
@@ -521,6 +548,7 @@ function sim_working_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Ns
 
         forwardInputsEPrev .= forwardInputsE
         forwardInputsIPrev .= forwardInputsI
+        next!(pl)
     end
 
     print("\r")

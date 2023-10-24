@@ -3,9 +3,9 @@ using Plots
 using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
+using Profile
 
-include("network.jl")
-include("sim_inject_1.0.0.jl")
+include("sim_inject_2.0.0.jl")
 
 #plot or not
 doplot = true
@@ -40,7 +40,7 @@ params = NetworkParameters(
     5000,  # Ncells
     4000,  # Ne
     1000,  # Ni
-    2000,  # T
+    1500,  # T
     15,    # taue
     10,    # taui
     0.5,   # pei
@@ -60,7 +60,7 @@ params = NetworkParameters(
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
 

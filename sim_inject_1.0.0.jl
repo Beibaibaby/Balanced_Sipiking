@@ -400,7 +400,7 @@ end
 
 
 
-function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-5:5, num_pairs::Int=100)
+function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-5:5, num_pairs::Int=50)
     # Ensure input matrices have the same dimensions
     if size(E_input) != size(I_input)
         error("E_input and I_input must have the same dimensions.")
@@ -733,7 +733,6 @@ function sim_new_new()
     xedecay = zeros(Ncells)
     xirise = zeros(Ncells)
     xidecay = zeros(Ncells)
-
     v = rand(Ncells)
     lastSpike = -100 * ones(Ncells)
     Nsteps = round(Int, T / dt)

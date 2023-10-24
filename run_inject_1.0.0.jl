@@ -153,7 +153,7 @@ EPSP_EPSP_pool=v_history[1:100,end-9999:end]
 TT_pool=v_history[501:600,end-9999:end]
 IPSP_IPSP_pool=v_history[1001:1100,end-9999:end]
 
-IPSP_IPSP_pool= IPSP_IPSP_pool .- 1
+IPSP_IPSP_pool= IPSP_IPSP_pool .- 2
 TT_pool=TT_pool .- 1
 EPSP_EPSP_pool=EPSP_EPSP_pool .+ 0.2
 
@@ -164,7 +164,7 @@ IPSP_IPSP_accumulator = zeros(100, 10000)
 
 if do_repeat_v_corr
 
-n_run=300
+n_run=20
 for iter in 1:n_run
     println("Current iteration: $iter")  # This line prints the current iteration number
     local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool

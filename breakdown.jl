@@ -61,5 +61,5 @@ params = NetworkParameters(
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-@profile times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
-ProfileView.svgwrite("./proflie.svg")
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
+

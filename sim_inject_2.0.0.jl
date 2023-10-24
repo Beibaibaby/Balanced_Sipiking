@@ -466,7 +466,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     
     println("Starting simulation")
-    pl = Progress(Nsteps, 15)
+    pl = Progress(Nsteps, 10)
     
 
     corr_pairs=100
@@ -478,10 +478,10 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         weights_D .+= (1 .- weights_D) ./ tau_d
         weights_F .+= (1 .- weights_F) ./ tau_f
 
-
+        ###Most time consuming and there are mistakes here, fix it
         W_sub = weights[end-Ne+1:end, 1:Ne]
         weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[end-Ne+1:end] .* weights_F[end-Ne+1:end])
-        
+
 
         for ci = 1:Ncells
             

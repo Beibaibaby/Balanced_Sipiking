@@ -428,8 +428,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     tau[(Ne + 1):Ncells] .= taui
 
     weights = zeros(Ncells, Ncells)
-    weights_D = ones(Ncells) #the sending D
-    weights_F = ones(Ncells) #the sending F
+    weights_D = ones(Ne) #the sending D
+    weights_F = ones(Ne) #the sending F
     # Here we only need one decay/facilitation factor for one given neuron i, the factors from i to j are all the same
 
     # Random connections
@@ -479,9 +479,11 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         weights_F .+= (1 .- weights_F) ./ tau_f
 
         ###Most time consuming and there are mistakes here, fix it
-        W_sub = weights[end-Ne+1:end, 1:Ne]
-        weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[end-Ne+1:end] .* weights_F[end-Ne+1:end])
-
+        #W_sub = weights[end-Ne+1:end, 1:Ne]
+        #weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[1:Ne] .* weights_F[1:Ne])
+        W_sub_view = @view weights[end-Ne+1:end, 1:Ne]
+        W_sub_view .= W_sub_view .* (weights_D .* weights_F)
+        #need to compare the results
 
         for ci = 1:Ncells
             

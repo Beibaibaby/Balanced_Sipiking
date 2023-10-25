@@ -3,7 +3,7 @@ using Plots
 using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
-using Profile
+#using Profile
 include("sim_inject_2.0.0.jl")
 
 struct NetworkParameters

@@ -4,16 +4,7 @@ using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
 using Profile
-
 include("sim_inject_2.0.0.jl")
-
-#plot or not
-doplot = true
-do_v_corr = false
-do_repeat_v_corr=false
-
-#Setting the parameters
-###################################################
 
 struct NetworkParameters
     Ncells::Int
@@ -33,36 +24,62 @@ struct NetworkParameters
     jee_para::Float64
     Nstim::Int
     stimstr_para::Float64
+    d::Float64
+    f::Float64
 end
 
-# Now, using the provided values, create an instance of the struct:
-params = NetworkParameters(
-    5000,  # Ncells
-    4000,  # Ne
-    1000,  # Ni
-    1500,  # T
-    15,    # taue
-    10,    # taui
-    0.5,   # pei
-    0.5,   # pie
-    0.5,   # pii
-    0.2,   # pee
-    800,   # K
-    4.0,   # jie
-    -18.0 * 1.2,  # jei
-    -16.0,  # jii
-    10.0,   # jee
-    400,    # Nstim
-    0       # stimstr
+# Define a function to retrieve a value from ARGS or return a default value if not present.
+function get_arg(key, default)
+    index = findfirst(==(key), ARGS)
+    if index !== nothing && index < length(ARGS)
+        return ARGS[index + 1]
+    end
+    return default
+end
+
+
+function run_experiment(;
+    Ncells=5000,
+    Ne=4000,
+    Ni=1000,
+    T=1000,
+    taue=15,
+    taui=10,
+    pei=0.5,
+    pie=0.5,
+    pii=0.5,
+    pee=0.2,
+    K=800,
+    jie=4.0,
+    jei=-18.0 * 1.2,
+    jii=-16.0,
+    jee=10.0,
+    Nstim=400,
+    stimstr=0.0,
+    d=0.15,
+    f=0.0
 )
 
+
+#plot or not
+doplot = true
+do_v_corr = false
+do_repeat_v_corr=false
+
+#Setting the parameters
+############################
+# Now, use the provided values to create an instance of the struct:
+params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f)
 
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_history, weights_F_history=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
+mean_weights_D = mean(weights_D_history, dims=2)
+mean_weights_F = mean(weights_F_history, dims=2)
+product_weights = mean_weights_D .* mean_weights_F
 
 
 if doplot 
@@ -97,8 +114,14 @@ fig_filename = "../figs_paras/$timestamp_str.png"
 # Save the figure with the timestamped filename
 savefig(p2, fig_filename)
 
+p3 = plot(product_weights, label="Product over time", xlabel="Time", ylabel="Product Value", title="Product of Mean weights_D and weights_F over time")
+savefig(p3,"../figs_paras/$timestamp_str+product.png")  # Save the plot as an image
+
 println("Figure saved as $fig_filename")  
 json_filename = "../figs_paras/$timestamp_str.json"
+
+
+
 
 param_dict = Dict(
     "Ncells" => params.Ncells,
@@ -117,7 +140,9 @@ param_dict = Dict(
     "jei_para" => params.jei_para,
     "jii_para" => params.jii_para,
     "Nstim" => params.Nstim,
-    "stimstr_para" => params.stimstr_para
+    "stimstr_para" => params.stimstr_para,
+    "d" => params.d,
+    "f" => params.f,
 )
 
 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -223,3 +248,49 @@ plot_cells(v_history, [1, 505, 1005])
 println("finish")
 
 end
+
+
+end
+
+
+
+# Extract parameters from ARGS or use default values
+Ncells = parse(Int, get_arg("--Ncells", "5000"))
+Ne = parse(Int, get_arg("--Ne", "4000"))
+Ni = parse(Int, get_arg("--Ni", "1000"))
+T = parse(Int, get_arg("--T", "1000"))
+taue = parse(Int, get_arg("--taue", "15"))
+taui = parse(Int, get_arg("--taui", "10"))
+pei = parse(Float64, get_arg("--pei", "0.5"))
+pie = parse(Float64, get_arg("--pie", "0.5"))
+pii = parse(Float64, get_arg("--pii", "0.5"))
+pee = parse(Float64, get_arg("--pee", "0.2"))
+K = parse(Int, get_arg("--K", "800"))
+jie = parse(Float64, get_arg("--jie", "4.0"))
+jei = parse(Float64, get_arg("--jei", string(-18.0 * 1.2)))
+jii = parse(Float64, get_arg("--jii", "-16.0"))
+jee = parse(Float64, get_arg("--jee", "10.0"))
+Nstim = parse(Int, get_arg("--Nstim", "400"))
+stimstr = parse(Float64, get_arg("--stimstr", "0"))
+d = parse(Float64, get_arg("d", "0.15"))
+f = parse(Float64, get_arg("f", "0.0"))
+run_experiment(;Ncells,
+    Ne,
+    Ni,
+    T,
+    taue,
+    taui,
+    pei,
+    pie,
+    pii,
+    pee,
+    K,
+    jie,
+    jei,
+    jii,
+    jee,
+    Nstim,
+    stimstr,
+    d,
+    f
+)

@@ -362,9 +362,8 @@ function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 end
 
 ##oldest version + para setting+ E->I dyanmic 
-function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para)
+function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f)
     println("Setting up parameters")
-
 
     # Network parameters
 
@@ -383,8 +382,9 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     stimstart = T - 1100
     stimend = T
 
-    d = 0.15       # depression fraction upon a spike
-    f = 0.92         # facilitation increment upon a spike
+    #d = 0.15       # depression fraction upon a spike
+    #f = 0.92  (orignal)      # facilitation increment upon a spike
+    #f = 0.5
     #tau_d = 103.0     # time constant for D to recover to 1 (ms)
     #tau_f = 96.0     # time constant for F to recover to 1 (ms)
     
@@ -430,6 +430,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     weights = zeros(Ncells, Ncells)
     weights_D = ones(Ne) #the sending D
     weights_F = ones(Ne) #the sending F
+
     # Here we only need one decay/facilitation factor for one given neuron i, the factors from i to j are all the same
 
     # Random connections
@@ -446,6 +447,11 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     times = zeros(Ncells, maxTimes)
     ns = zeros(Int, Ncells)
     Nsteps = round(Int, T / dt)
+
+
+    weights_D_history = zeros(Nsteps, Ne)  # Assuming weights_D has size Ncells
+    weights_F_history = zeros(Nsteps, Ne)  # Assuming weights_F has size Ncells
+
     v_history = zeros(Ncells, Nsteps)  # Nsteps because we're saving at each time step, not just spikes
     E_input=zeros(Ncells, Nsteps) 
     I_input=zeros(Ncells, Nsteps)
@@ -477,7 +483,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         
         weights_D .+= (1 .- weights_D) ./ tau_d
         weights_F .+= (1 .- weights_F) ./ tau_f
-
+        weights_D_history[ti, :] = weights_D
+        weights_F_history[ti, :] = weights_F
         ###Most time consuming and there are mistakes here, fix it
         #W_sub = weights[end-Ne+1:end, 1:Ne]
         #weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[1:Ne] .* weights_F[1:Ne])
@@ -562,7 +569,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
        println("triger")
     end
 
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_history, weights_F_history
 end
 
 

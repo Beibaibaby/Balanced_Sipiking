@@ -379,7 +379,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     # Stimulation
     stimstr = stimstr_para/taue 
-    stimstart = T - 1100
+    stimstart = T - 500
     stimend = T
 
     #d = 0.15       # depression fraction upon a spike
@@ -449,8 +449,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     Nsteps = round(Int, T / dt)
 
 
-    weights_D_history = zeros(Nsteps, Ne)  # Assuming weights_D has size Ncells
-    weights_F_history = zeros(Nsteps, Ne)  # Assuming weights_F has size Ncells
+    weights_D_mean = zeros(Nsteps)  
+    weights_F_mean = zeros(Nsteps)
 
     v_history = zeros(Ncells, Nsteps)  # Nsteps because we're saving at each time step, not just spikes
     E_input=zeros(Ncells, Nsteps) 
@@ -472,10 +472,10 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     
     println("Starting simulation")
-    pl = Progress(Nsteps, 10)
+    pl = Progress(Nsteps, 5)
     
-
     corr_pairs=100
+
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -483,14 +483,13 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         
         weights_D .+= (1 .- weights_D) ./ tau_d
         weights_F .+= (1 .- weights_F) ./ tau_f
-        weights_D_history[ti, :] = weights_D
-        weights_F_history[ti, :] = weights_F
-        ###Most time consuming and there are mistakes here, fix it
-        #W_sub = weights[end-Ne+1:end, 1:Ne]
-        #weights[end-Ne+1:end, 1:Ne] = W_sub .* (weights_D[1:Ne] .* weights_F[1:Ne])
+
+        weights_D_mean[ti] = mean(weights_D)
+        weights_F_mean[ti] = mean(weights_F)
+
         W_sub_view = @view weights[end-Ne+1:end, 1:Ne]
         W_sub_view .= W_sub_view .* (weights_D .* weights_F)
-        #need to compare the results
+
 
         for ci = 1:Ncells
             
@@ -566,10 +565,10 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     if maximum(ns)<=maxTimes
          times = times[:, 1:maximum(ns)]
     else
-       println("triger")
+       println("no over max")
     end
-
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_history, weights_F_history
+    
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean
 end
 
 
@@ -1115,7 +1114,7 @@ end
 
 #tune_parameters()
 
-function compute_sliding_rate(spiketimes, window_size, step_size, T)
+function compute_sliding_rate_old(spiketimes, window_size, step_size, T)
     n_neurons, _ = size(spiketimes)
     n_steps = floor(Int, (T - window_size) / step_size) + 1
     rates = zeros(n_steps)
@@ -1135,6 +1134,35 @@ function compute_sliding_rate(spiketimes, window_size, step_size, T)
     #println(rates)
     return rates
 end
+
+function compute_sliding_rate(spiketimes, window_size, step_size, T)
+    println("starting computing firing rate")
+    n_neurons, _ = size(spiketimes)
+    n_steps = floor(Int, (T - window_size) / step_size) + 1
+    rates = zeros(n_steps)
+
+    p = Progress(n_steps, 2) # Initialize the progress bar
+
+    for i = 1:n_steps
+        next!(p) # Update the progress bar
+
+        t_start = (i-1) * step_size + 1  # Ensure the start time is non-zero
+        t_end = t_start + window_size - 1  # Adjust end time based on start
+        
+        # Check for out-of-bounds
+        if t_end > T
+            break
+        end
+
+        n_spikes = sum([sum((t_start .<= spiketimes[j, :]) .& (spiketimes[j, :] .< t_end)) for j=1:n_neurons])
+        rates[i] = n_spikes / (n_neurons * window_size) * 1000  # rate in Hz
+    end
+    #println(rates)
+    return rates
+end
+
+
+
 
 function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
     # Assuming the dictionaries have the same keys

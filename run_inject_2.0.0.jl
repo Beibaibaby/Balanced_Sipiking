@@ -39,25 +39,25 @@ end
 
 
 function run_experiment(;
-    Ncells=5000,
-    Ne=4000,
-    Ni=1000,
-    T=1000,
-    taue=15,
-    taui=10,
-    pei=0.5,
-    pie=0.5,
-    pii=0.5,
-    pee=0.2,
-    K=800,
-    jie=4.0,
-    jei=-18.0 * 1.2,
-    jii=-16.0,
-    jee=10.0,
-    Nstim=400,
-    stimstr=0.0,
-    d=0.15,
-    f=0.0
+    Ncells,
+    Ne,
+    Ni,
+    T,
+    taue,
+    taui,
+    pei,
+    pie,
+    pii,
+    pee,
+    K,
+    jie,
+    jei,
+    jii,
+    jee,
+    Nstim,
+    stimstr,
+    d,
+    f
 )
 
 
@@ -74,12 +74,10 @@ params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K,
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_history, weights_F_history=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f)
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
-mean_weights_D = mean(weights_D_history, dims=2)
-mean_weights_F = mean(weights_F_history, dims=2)
-product_weights = mean_weights_D .* mean_weights_F
+product_weights = weights_D_mean .* weights_F_mean
 
 
 if doplot 
@@ -274,6 +272,9 @@ Nstim = parse(Int, get_arg("--Nstim", "400"))
 stimstr = parse(Float64, get_arg("--stimstr", "0"))
 d = parse(Float64, get_arg("d", "0.15"))
 f = parse(Float64, get_arg("f", "0.0"))
+
+println(stimstr)
+
 run_experiment(;Ncells,
     Ne,
     Ni,

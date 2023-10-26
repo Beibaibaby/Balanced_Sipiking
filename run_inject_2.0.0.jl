@@ -26,6 +26,7 @@ struct NetworkParameters
     stimstr_para::Float64
     d::Float64
     f::Float64
+    stim_duration::Int
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -57,7 +58,8 @@ function run_experiment(;
     Nstim,
     stimstr,
     d,
-    f
+    f,
+    stim_duration
 )
 
 
@@ -69,12 +71,12 @@ do_repeat_v_corr=false
 #Setting the parameters
 ############################
 # Now, use the provided values to create an instance of the struct:
-params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f)
+params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration)
 
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f)
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f,params.stim_duration)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
 product_weights = weights_D_mean .* weights_F_mean
@@ -112,7 +114,10 @@ fig_filename = "../figs_paras/$timestamp_str.png"
 # Save the figure with the timestamped filename
 savefig(p2, fig_filename)
 
-p3 = plot(product_weights, label="Product over time", xlabel="Time", ylabel="Product Value", title="Product of Mean weights_D and weights_F over time")
+# Generate scaled x-values
+x_values = 0:0.1:(length(product_weights) - 1) * 0.1
+#plot
+p3 = plot(x_values, product_weights, label="Product over time", xlabel="Time (ms)", ylabel="Product Value", title="Product of Mean weights_D and weights_F over time")
 savefig(p3,"../figs_paras/$timestamp_str+product.png")  # Save the plot as an image
 
 println("Figure saved as $fig_filename")  
@@ -141,6 +146,7 @@ param_dict = Dict(
     "stimstr_para" => params.stimstr_para,
     "d" => params.d,
     "f" => params.f,
+    "stim_duration" => params.stim_duration
 )
 
 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -270,10 +276,12 @@ jii = parse(Float64, get_arg("--jii", "-16.0"))
 jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "400"))
 stimstr = parse(Float64, get_arg("--stimstr", "0"))
-d = parse(Float64, get_arg("d", "0.15"))
-f = parse(Float64, get_arg("f", "0.0"))
+d = parse(Float64, get_arg("--d", "0.15"))
+f = parse(Float64, get_arg("--f", "0.0"))
+stim_duration= parse(Int, get_arg("--stim_duration", "500"))
 
 println(stimstr)
+println(stim_duration)
 
 run_experiment(;Ncells,
     Ne,
@@ -293,5 +301,6 @@ run_experiment(;Ncells,
     Nstim,
     stimstr,
     d,
-    f
+    f,
+    stim_duration
 )

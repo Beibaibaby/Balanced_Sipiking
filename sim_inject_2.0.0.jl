@@ -362,7 +362,7 @@ function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 end
 
 ##oldest version + para setting+ E->I dyanmic 
-function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f)
+function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f,stim_duration)
     println("Setting up parameters")
 
     # Network parameters
@@ -379,7 +379,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     # Stimulation
     stimstr = stimstr_para/taue 
-    stimstart = T - 500
+    stimstart = T - stim_duration
     stimend = T
 
     #d = 0.15       # depression fraction upon a spike
@@ -1182,7 +1182,7 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_
     ylabel!("Correlation")
     title!("Cross-correlation")
     savefig("cross_correlation_plot_PSP_new.png")
-    display(plot)
+ 
 end
 
 function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, cross_corr_E_I, cross_corr_I_E)
@@ -1205,7 +1205,7 @@ function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, c
     ylabel!("Correlation")
     title!("Cross-correlation")
     savefig("cross_correlation_plot_PSP_mem.png")
-    display(plot)
+
 end
 
 function plot_cells(v_history, cells)
@@ -1215,5 +1215,4 @@ function plot_cells(v_history, cells)
         plot!(p[index], v_history[cell, :], label="Cell $cell", xlabel="Time", ylabel="Voltage", legend=:topright)
     end
     savefig("v_history.png")
-    display(p)
 end

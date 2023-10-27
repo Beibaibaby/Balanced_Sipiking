@@ -478,7 +478,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     pl = Progress(Nsteps, 5)
     
     corr_pairs=100
-    weights_copy = weights
+    weights_copy = copy(weights)
 
     for ti = 1:Nsteps
         t = dt * ti
@@ -494,9 +494,9 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         #W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
         #W_sub_view .*= (weights_D .* weights_F)'
         weights[(1 + Ne):Ncells, 1:Ne] = weights_copy[(1 + Ne):Ncells, 1:Ne] .* (weights_D .* weights_F)'
+
         W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
-        weights_IE_mean = mean(W_sub_view)
-        weights_IE_mean_history[ti] = weights_IE_mean
+        weights_IE_mean_history[ti] = mean(W_sub_view)
         for ci = 1:Ncells
             
 

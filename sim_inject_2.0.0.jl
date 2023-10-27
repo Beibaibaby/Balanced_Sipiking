@@ -488,7 +488,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         weights_F_mean[ti] = mean(weights_F)
         
         W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
-        W_sub_view .= W_sub_view .* (weights_D .* weights_F)
+        W_sub_view .*= (weights_D .* weights_F)'
 
 
         for ci = 1:Ncells

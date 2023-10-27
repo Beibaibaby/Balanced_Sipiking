@@ -364,7 +364,7 @@ end
 ##oldest version + para setting+ E->I dyanmic 
 function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time)
     println("Setting up parameters")
-
+    corr_flag=false
     # Network parameters
 
     Ncells = Ne+Ni
@@ -379,6 +379,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     # Stimulation
     stimstr = stimstr_para/taue 
+    print("stim is ")
+    println(stimstr)
     stimstart = stim_start_time
     stimend = stim_start_time+stim_duration
 
@@ -411,7 +413,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     tauedecay = 3
     tauidecay = 2
 
-    maxrate = 100  # Maximum average firing rate (Hz)
+    maxrate = 500  # Maximum average firing rate (Hz) was 100 orignally
 
     # Initialize parameters
     mu = zeros(Ncells)
@@ -466,7 +468,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     xidecay = zeros(Ncells)
 
     v = rand(Ncells)
-    v[1:3] .=0
+    #v[1:3] .=0
     #v = vre*ones(Ncells)
     lastSpike = -100 * ones(Ncells)
 
@@ -506,17 +508,21 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
             I_input[ci, ti] = synInput_I 
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             
-            if ci<corr_pairs
+            if corr_flag == true
+              if ci<corr_pairs
                 synInput=synInput_E-(mu[ci]+0.2)/tau[ci]
                 #synInput = synInput_E
-            end
+              end
 
-            if ci >= 500 && ci <600
+              if ci >= 500 && ci <600
                 synInput=synInput+(1-mu[ci])/tau[ci]
-            end
+              end
 
-            if ci >= 1001 && ci <1100
+              if ci >= 1001 && ci <1100
                 synInput=synInput_I+(2-mu[ci])/tau[ci]
+              end
+            else
+               synInput=synInput_E+synInput_I
             end
 
             if (ci < Nstim) && (t > stimstart) && (t < stimend)
@@ -527,9 +533,14 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
                 v[ci] += dt * ((1 / tau[ci]) * (mu[ci] - v[ci]) + synInput)     
                 v_history[ci, ti] = v[ci]
                 if v[ci] > thresh[ci]
-                    if (ci>=corr_pairs && ci<500 )||(ci>=600 && ci<=1000)  || ci>=1100
-                     v[ci] = vre
+                    if corr_flag == true
+                        if (ci>=corr_pairs && ci<500 )||(ci>=600 && ci<=1000)  || ci>=1100
+                           v[ci] = vre
+                        end
+                    else
+                        v[ci] = vre
                     end
+
                     lastSpike[ci] = t
                     ns[ci] += 1
                     if ns[ci] <= maxTimes

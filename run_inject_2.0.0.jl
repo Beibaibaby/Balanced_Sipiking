@@ -27,6 +27,7 @@ struct NetworkParameters
     d::Float64
     f::Float64
     stim_duration::Int
+    stim_start_time::Int
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -59,7 +60,8 @@ function run_experiment(;
     stimstr,
     d,
     f,
-    stim_duration
+    stim_duration,
+    stim_start_time
 )
 
 
@@ -71,12 +73,13 @@ do_repeat_v_corr=false
 #Setting the parameters
 ############################
 # Now, use the provided values to create an instance of the struct:
-params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration)
+params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration, stim_start_time)
 
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f,params.stim_duration)
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
+params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f,params.stim_duration,params.stim_start_time)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
 product_weights = weights_D_mean .* weights_F_mean
@@ -146,7 +149,8 @@ param_dict = Dict(
     "stimstr_para" => params.stimstr_para,
     "d" => params.d,
     "f" => params.f,
-    "stim_duration" => params.stim_duration
+    "stim_duration" => params.stim_duration,
+    "stim_start_time" => params.stim_start_time
 )
 
 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -279,6 +283,7 @@ stimstr = parse(Float64, get_arg("--stimstr", "0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.0"))
 stim_duration= parse(Int, get_arg("--stim_duration", "500"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "500"))
 
 println(stimstr)
 println(stim_duration)
@@ -302,5 +307,6 @@ run_experiment(;Ncells,
     stimstr,
     d,
     f,
-    stim_duration
+    stim_duration,
+    stim_start_time
 )

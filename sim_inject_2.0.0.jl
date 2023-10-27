@@ -362,7 +362,7 @@ function sim_working(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 end
 
 ##oldest version + para setting+ E->I dyanmic 
-function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f,stim_duration)
+function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time)
     println("Setting up parameters")
 
     # Network parameters
@@ -379,8 +379,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     # Stimulation
     stimstr = stimstr_para/taue 
-    stimstart = T - stim_duration
-    stimend = T
+    stimstart = stim_start_time
+    stimend = stim_start_time+stim_duration
 
     #d = 0.15       # depression fraction upon a spike
     #f = 0.92  (orignal)      # facilitation increment upon a spike
@@ -536,10 +536,11 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
                         times[ci, ns[ci]] = t
                     end
                     
-                   if ci <=Ne
+                    #test if remove
+                   
                     weights_D[ci] = d * weights_D[ci]
                     weights_F[ci] = f + weights_F[ci]
-                   end                               
+                                                
 
                     for j = 1:Ncells
                         if weights[j, ci] > 0  # E synapse

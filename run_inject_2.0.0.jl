@@ -78,7 +78,7 @@ params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K,
 #store it
 #run the stimulus
 #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
+times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history=sim_dynamic_EI(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
 params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,params.f,params.stim_duration,params.stim_start_time)
 println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
 println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
@@ -119,9 +119,19 @@ savefig(p2, fig_filename)
 
 # Generate scaled x-values
 x_values = 0:0.1:(length(product_weights) - 1) * 0.1
-#plot
+
+# Create individual subplots
 p3 = plot(x_values, product_weights, label="Product over time", xlabel="Time (ms)", ylabel="Product Value", title="Product of Mean weights_D and weights_F over time")
-savefig(p3,"../figs_paras/$timestamp_str+product.png")  # Save the plot as an image
+p4 = plot(x_values, weights_IE_mean_history, label="IE Mean History", xlabel="Time (ms)", ylabel="Value", title="IE Mean History over Time")
+
+# Combine the subplots into one layout
+p5 = plot(p3, p4, layout = (2,1))
+
+# Save the plot as an image
+savefig(p5,"../figs_paras/$timestamp_str+combined.png") 
+
+println("Combined figure saved as ../figs_paras/$timestamp_str+combined.png") 
+
 
 println("Figure saved as $fig_filename")  
 json_filename = "../figs_paras/$timestamp_str.json"

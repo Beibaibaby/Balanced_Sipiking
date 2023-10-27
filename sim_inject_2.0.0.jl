@@ -453,6 +453,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
     weights_D_mean = zeros(Nsteps)  
     weights_F_mean = zeros(Nsteps)
+    weights_IE_mean_history = zeros(Nsteps)
 
     v_history = zeros(Ncells, Nsteps)  # Nsteps because we're saving at each time step, not just spikes
     E_input=zeros(Ncells, Nsteps) 
@@ -471,12 +472,13 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     #v[1:3] .=0
     #v = vre*ones(Ncells)
     lastSpike = -100 * ones(Ncells)
-
+    
     
     println("Starting simulation")
     pl = Progress(Nsteps, 5)
     
     corr_pairs=100
+    weights_copy = weights
 
     for ti = 1:Nsteps
         t = dt * ti
@@ -489,10 +491,12 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
         weights_D_mean[ti] = mean(weights_D)
         weights_F_mean[ti] = mean(weights_F)
         
+        #W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
+        #W_sub_view .*= (weights_D .* weights_F)'
+        weights[(1 + Ne):Ncells, 1:Ne] = weights_copy[(1 + Ne):Ncells, 1:Ne] .* (weights_D .* weights_F)'
         W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
-        W_sub_view .*= (weights_D .* weights_F)'
-
-
+        weights_IE_mean = mean(W_sub_view)
+        weights_IE_mean_history[ti] = weights_IE_mean
         for ci = 1:Ncells
             
 
@@ -580,7 +584,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
        println("no over max")
     end
     
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean, weights_IE_mean_history
 end
 
 

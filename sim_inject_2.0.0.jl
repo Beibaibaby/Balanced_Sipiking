@@ -438,7 +438,7 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     weights[1:Ne, (1 + Ne):Ncells] .= jei .* (rand(Ne, Ni) .< pei)
     weights[(1 + Ne):Ncells, 1:Ne] .= jie .* (rand(Ni, Ne) .< pie)
     weights[(1 + Ne):Ncells, (1 + Ne):Ncells] .= jii .* (rand(Ni, Ni) .< pii)
-
+    
     for ci = 1:Ncells
         weights[ci, ci] = 0
     end
@@ -486,8 +486,8 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
 
         weights_D_mean[ti] = mean(weights_D)
         weights_F_mean[ti] = mean(weights_F)
-
-        W_sub_view = @view weights[end-Ne+1:end, 1:Ne]
+        
+        W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
         W_sub_view .= W_sub_view .* (weights_D .* weights_F)
 
 

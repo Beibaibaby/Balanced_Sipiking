@@ -537,10 +537,10 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
                     end
                     
                     #test if remove
-                   
+                   if ci < Ne
                     weights_D[ci] = d * weights_D[ci]
                     weights_F[ci] = f + weights_F[ci]
-                                                
+                   end                             
 
                     for j = 1:Ncells
                         if weights[j, ci] > 0  # E synapse

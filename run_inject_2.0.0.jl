@@ -121,11 +121,39 @@ savefig(p2, fig_filename)
 x_values = 0:0.1:(length(product_weights) - 1) * 0.1
 
 # Create individual subplots
-p3 = plot(x_values, product_weights, label="Product over time", xlabel="Time (ms)", ylabel="Product Value", title="Product of Mean weights_D and weights_F over time")
-p4 = plot(x_values, weights_IE_mean_history, label="IE Mean History", xlabel="Time (ms)", ylabel="Value", title="IE Mean History over Time")
+# Adjust title font size and margins for the plots
+title_fontsize = 12  # You can adjust this value as needed
+left_margin = 10   # Adjust this value as needed
+
+# Create individual subplots with the modifications
+fig_width = 1800  # Width in pixels
+fig_height = 600  # Height in pixels
+title_fontsize = 14  # Title font size
+
+p3 = plot(
+    x_values, product_weights, 
+    label="Product over time", 
+    xlabel="Time (ms)", 
+    ylabel="Product Value", 
+    title="Product of Mean weights_D and weights_F over time", 
+    titlefontsize=title_fontsize,
+    size=(fig_width, fig_height)
+)
+
+p4 = plot(
+    x_values, weights_IE_mean_history, 
+    label="IE Mean History", 
+    xlabel="Time (ms)", 
+    ylabel="Value", 
+    title="IE Mean History over Time", 
+    titlefontsize=title_fontsize,
+    size=(fig_width, fig_height)
+)
 
 # Combine the subplots into one layout
-p5 = plot(p3, p4, layout = (2,1))
+p5 = plot(p3, p4, layout = (2,1), size=(fig_width, fig_height*2))
+
+
 
 # Save the plot as an image
 savefig(p5,"../figs_paras/$timestamp_str+combined.png") 

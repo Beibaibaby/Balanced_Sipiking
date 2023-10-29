@@ -23,8 +23,16 @@ function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,j
     stimstr = stimstr_para/taue 
     print("stim is ")
     println(stimstr)
+
     stimstart = stim_start_time
     stimend = stim_start_time+stim_duration
+    
+    print("stim starting time is ")
+    println(stim_start_time)
+
+    print("stim ending time is ")
+    println(stimend)
+
 
     #d = 0.15       # depression fraction upon a spike
     #f = 0.92  (orignal)      # facilitation increment upon a spike

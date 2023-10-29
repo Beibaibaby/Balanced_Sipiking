@@ -13,4 +13,4 @@
 #SBATCH --error=jobname.%j.err  # Stderr (%j expands to jobId)
 
 ### Your experiment commands go here
-#julia run_inject_2.0.0.jl --T 500 --f 0.0
+#julia run_inject_2.0.0.jl --T 5000 --d 0.9998 

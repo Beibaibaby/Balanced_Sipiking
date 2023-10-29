@@ -94,7 +94,7 @@ if doplot
 println("creating plot")
 
 # Define plot size: (width, height)
-plot_size = (600, 400) 
+plot_size = (1000, 600) 
 
 # Parameters for sliding window
 window_size = 100  # in ms
@@ -323,8 +323,7 @@ f = parse(Float64, get_arg("--f", "0.0"))
 stim_duration= parse(Int, get_arg("--stim_duration", "0"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
 
-println(stimstr)
-println(stim_duration)
+
 
 run_experiment(;Ncells,
     Ne,

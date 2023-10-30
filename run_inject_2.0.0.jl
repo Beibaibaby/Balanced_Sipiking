@@ -109,8 +109,9 @@ n_steps = length(e_rate)  # or length(i_rate), assuming they have the same lengt
 #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
 time_values = [i * step_size + window_size  for i in 1:n_steps]
 
-p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)",
-      label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
+# Add a code to detect low rate or not 
+#p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
+p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
 plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
 
 fig_filename = "../figs_paras/$timestamp_str.png"

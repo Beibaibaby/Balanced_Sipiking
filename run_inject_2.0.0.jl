@@ -106,10 +106,11 @@ i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_
 
 # Compute the time values based on window_size and step_size
 n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
-time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
+#time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
+time_values = [i * step_size + window_size  for i in 1:n_steps]
 
 p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)",
-      label="Excitatory", lw=2, linecolor=:red, size=plot_size)
+      label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
 plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
 
 fig_filename = "../figs_paras/$timestamp_str.png"
@@ -135,7 +136,7 @@ p3 = plot(
     label="Product over time", 
     xlabel="Time (ms)", 
     ylabel="Product Value", 
-    title="Product of Mean weights_D and weights_F over time", 
+    title="Product of D and F (d=$d)", 
     titlefontsize=title_fontsize,
     size=(fig_width, fig_height)
 )
@@ -145,7 +146,7 @@ p4 = plot(
     label="IE Mean History", 
     xlabel="Time (ms)", 
     ylabel="Value", 
-    title="IE Mean History over Time", 
+    title="I->E strength (d=$d) ", 
     titlefontsize=title_fontsize,
     size=(fig_width, fig_height)
 )

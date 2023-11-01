@@ -143,8 +143,6 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         weights_D_mean[ti] = mean(weights_D)
         weights_F_mean[ti] = mean(weights_F)
         
-        #W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
-        #W_sub_view .*= (weights_D .* weights_F)'
         if ie_sign == true
            weights[(1 + Ne):Ncells, 1:Ne] = weights_copy[(1 + Ne):Ncells, 1:Ne] .* (weights_D)'
         end 
@@ -153,14 +151,14 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             weights[1:Ne, 1:Ne] = weights_copy[1:Ne, 1:Ne] .* (weights_D .* weights_F)'
         end 
 
-        W_sub_view = @view weights[(1 + Ne):Ncells, 1:Ne]
-        weights_IE_mean_history[ti] = mean(W_sub_view)
+        W_sub_view_ie = @view weights[(1 + Ne):Ncells, 1:Ne]
+        weights_IE_mean_history[ti] = mean(W_sub_view_ie)
         W_sub_view_ee = @view weights[1:Ne, 1:Ne]
         weights_EE_mean_history[ti] = mean(W_sub_view_ee)
 
+
         for ci = 1:Ncells
             
-
             xerise[ci] += -dt * xerise[ci] / tauerise + forwardInputsEPrev[ci]
             xedecay[ci] += -dt * xedecay[ci] / tauedecay + forwardInputsEPrev[ci]
             xirise[ci] += -dt * xirise[ci] / taurise + forwardInputsIPrev[ci]

@@ -3,6 +3,7 @@ using Plots
 using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
+using JLD2
 #using Profile
 include("sim_inject_3.0.0.jl")
 
@@ -92,6 +93,8 @@ function run_experiment(;
         product_weights = weights_D_mean .* weights_F_mean
 
 
+
+
         if doplot 
 
             # Generate a timestamp for unique filenames
@@ -111,24 +114,45 @@ function run_experiment(;
         e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
         i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
+
         # Compute the time values based on window_size and step_size
         n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
         #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
         time_values = [i * step_size + window_size  for i in 1:n_steps]
 
         # Add a code to detect low rate or not 
-       
+         
         if low_plot ##this para control whether focus on the zoom in low activity
             p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
             plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
         else
-            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
+            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
             plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
         end 
+        
+        dir_name = "../figs_paras/$timestamp_str"
+        #Create the directory for results
+        if !isdir(dir_name)
+            mkdir(dir_name)
+        end
 
-        fig_filename = "../figs_paras/$timestamp_str.png"
+        variables_to_save = [
+            :times, :ns, :Ne, :Ncells, :T, :v_history, 
+            :E_input, :I_input, :weights, :weights_D_mean, 
+            :weights_F_mean, :weights_IE_mean_history, :weights_EE_mean_history
+        ]
+        
+        # Iterate over the list and save each variable
+        for var in variables_to_save
+            # Construct filename
+            file_n = "$dir_name/$(var).jld2"
+            
+            # Save variable
+            @save $file_n $var
+        end
 
-        # Save the figure with the timestamped filename
+
+        fig_filename = "$dir_name/FR_$timestamp_str.png"
         savefig(p2, fig_filename)
 
         # Generate scaled x-values
@@ -159,7 +183,7 @@ function run_experiment(;
             label="IE Mean History", 
             xlabel="Time (ms)", 
             ylabel="Value", 
-            title="I->E strength (d=$d) ", 
+            title="E->I strength (d=$d) ", 
             titlefontsize=title_fontsize,
             size=(fig_width, fig_height)
         )
@@ -170,13 +194,13 @@ function run_experiment(;
 
 
         # Save the plot as an image
-        savefig(p5,"../figs_paras/$timestamp_str+combined.png") 
+        savefig(p5,"$dir_name/$timestamp_str+combined.png") 
 
-        println("Combined figure saved as ../figs_paras/$timestamp_str+combined.png") 
+        println("Combined figure saved as $dir_name/$timestamp_str+combined.png") 
 
 
         println("Figure saved as $fig_filename")  
-        json_filename = "../figs_paras/$timestamp_str.json"
+        json_filename = "$dir_name/$timestamp_str.json"
 
 
 

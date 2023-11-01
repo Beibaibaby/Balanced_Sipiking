@@ -4,7 +4,7 @@ using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
 #using Profile
-include("sim_inject_2.0.0.jl")
+include("sim_inject_3.0.0.jl")
 
 struct NetworkParameters
     Ncells::Int
@@ -28,9 +28,9 @@ struct NetworkParameters
     f::Float64
     stim_duration::Int
     stim_start_time::Int
-    ie_sign::Boolean
-    ee_sign::Boolean
-    corr_flag::Boolean
+    ie_sign::Bool
+    ee_sign::Bool
+    corr_flag::Bool
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -67,7 +67,8 @@ function run_experiment(;
     stim_start_time,
     ie_sign,
     ee_sign,
-    corr_flag
+    corr_flag,
+    low_plot
 )
         
         doplot = true
@@ -82,7 +83,7 @@ function run_experiment(;
         #store it
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic_EI(
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
             params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag)
@@ -116,9 +117,14 @@ function run_experiment(;
         time_values = [i * step_size + window_size  for i in 1:n_steps]
 
         # Add a code to detect low rate or not 
-        #p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
-        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
-        plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+       
+        if low_plot ##this para control whether focus on the zoom in low activity
+            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
+            plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+        else
+            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
+            plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+        end 
 
         fig_filename = "../figs_paras/$timestamp_str.png"
 
@@ -330,13 +336,14 @@ jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "0"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
-f = parse(Float64, get_arg("--f", "0.0"))
+f = parse(Float64, get_arg("--f", "0.92"))
 stim_duration= parse(Int, get_arg("--stim_duration", "0"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
 
-ie_sign = parse(Boolean, get_arg("--ie_sign", "false"))
-ee_sign = parse(Boolean, get_arg("--ee_sign", "true"))
-corr_flag = parse(Boolean, get_arg("--corr_flag", "false"))
+ie_sign = parse(Bool, get_arg("--ie_sign", "false")) #controal E->I is dynamic or not 
+ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
+corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
+low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 run_experiment(;Ncells,
     Ne,
@@ -361,5 +368,6 @@ run_experiment(;Ncells,
     stim_start_time,
     ie_sign,
     ee_sign,
-    corr_flag
+    corr_flag,
+    low_plot
 )

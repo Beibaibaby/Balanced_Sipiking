@@ -4,7 +4,7 @@
 using Statistics
 using ProgressMeter
 
-function sim_dynamic_EI(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
+function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
     jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag)
     println("Setting up parameters")
     #corr_flag=false

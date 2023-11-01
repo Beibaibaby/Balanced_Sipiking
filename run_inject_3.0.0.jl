@@ -84,6 +84,7 @@ function run_experiment(;
         #store it
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
+        global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
         times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
@@ -98,151 +99,151 @@ function run_experiment(;
         if doplot 
 
             # Generate a timestamp for unique filenames
-            timestamp = Dates.now()
-            timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+                timestamp = Dates.now()
+                timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
-        println("creating plot")
+                println("creating plot")
 
-        # Define plot size: (width, height)
-        plot_size = (1000, 600) 
+                # Define plot size: (width, height)
+                plot_size = (1000, 600) 
 
-        # Parameters for sliding window
-        window_size = 100  # in ms
-        step_size = 5     # in ms
+                # Parameters for sliding window
+                window_size = 100  # in ms
+                step_size = 5     # in ms
 
-        #print(Ne)
-        e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
-        i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
-
-
-        # Compute the time values based on window_size and step_size
-        n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
-        #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
-        time_values = [i * step_size + window_size  for i in 1:n_steps]
-
-        # Add a code to detect low rate or not 
-         
-        if low_plot ##this para control whether focus on the zoom in low activity
-            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
-            plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
-        else
-            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
-            plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
-        end 
-        
-        dir_name = "../figs_paras/$timestamp_str"
-        #Create the directory for results
-        if !isdir(dir_name)
-            mkdir(dir_name)
-        end
-
-        variables_to_save = [
-            :times, :ns, :Ne, :Ncells, :T, :v_history, 
-            :E_input, :I_input, :weights, :weights_D_mean, 
-            :weights_F_mean, :weights_IE_mean_history, :weights_EE_mean_history
-        ]
-        
-        # Iterate over the list and save each variable
-        for var in variables_to_save
-            # Construct filename
-            file_n = "$dir_name/$(var).jld2"
-            
-            # Save variable
-            @save $file_n $var
-        end
+                #print(Ne)
+                e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
+                i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
 
-        fig_filename = "$dir_name/FR_$timestamp_str.png"
-        savefig(p2, fig_filename)
+                # Compute the time values based on window_size and step_size
+                n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
+                #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
+                time_values = [i * step_size + window_size  for i in 1:n_steps]
 
-        # Generate scaled x-values
-        x_values = 0:0.1:(length(product_weights) - 1) * 0.1
-
-        # Create individual subplots
-        # Adjust title font size and margins for the plots
-        title_fontsize = 12  # You can adjust this value as needed
-        left_margin = 10   # Adjust this value as needed
-
-        # Create individual subplots with the modifications
-        fig_width = 1800  # Width in pixels
-        fig_height = 600  # Height in pixels
-        title_fontsize = 14  # Title font size
-
-        p3 = plot(
-            x_values, product_weights, 
-            label="Product over time", 
-            xlabel="Time (ms)", 
-            ylabel="Product Value", 
-            title="Product of D and F (d=$d)", 
-            titlefontsize=title_fontsize,
-            size=(fig_width, fig_height)
-        )
-
-        p4 = plot(
-            x_values, weights_IE_mean_history, 
-            label="IE Mean History", 
-            xlabel="Time (ms)", 
-            ylabel="Value", 
-            title="E->I strength (d=$d) ", 
-            titlefontsize=title_fontsize,
-            size=(fig_width, fig_height)
-        )
-
-        # Combine the subplots into one layout
-        p5 = plot(p3, p4, layout = (2,1), size=(fig_width, fig_height*2))
+                # Add a code to detect low rate or not 
+                
+                if low_plot ##this para control whether focus on the zoom in low activity
+                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)", ylim=(0,5))
+                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+                else
+                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d)")
+                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+                end 
+                
+                dir_name = "../figs_paras/$timestamp_str"
+                #Create the directory for results
+                if !isdir(dir_name)
+                    mkdir(dir_name)
+                end
+                
+                @save "$dir_name/times.jld2" times
+                @save "$dir_name/ns.jld2" ns
+                @save "$dir_name/Ne.jld2" Ne
+                @save "$dir_name/Ncells.jld2" Ncells
+                @save "$dir_name/T.jld2" T
+                @save "$dir_name/v_history.jld2" v_history
+                @save "$dir_name/E_input.jld2" E_input
+                @save "$dir_name/I_input.jld2" I_input
+                @save "$dir_name/weights.jld2" weights
+                @save "$dir_name/weights_D_mean.jld2" weights_D_mean
+                @save "$dir_name/weights_F_mean.jld2" weights_F_mean
+                @save "$dir_name/weights_IE_mean_history.jld2" weights_IE_mean_history
+                @save "$dir_name/weights_EE_mean_history.jld2" weights_EE_mean_history
+                
 
 
+                fig_filename = "$dir_name/FR_$timestamp_str.png"
+                savefig(p2, fig_filename)
 
-        # Save the plot as an image
-        savefig(p5,"$dir_name/$timestamp_str+combined.png") 
+                # Generate scaled x-values
+                x_values = 0:0.1:(length(product_weights) - 1) * 0.1
 
-        println("Combined figure saved as $dir_name/$timestamp_str+combined.png") 
+                # Create individual subplots
+                # Adjust title font size and margins for the plots
+                title_fontsize = 12  # You can adjust this value as needed
+                left_margin = 10   # Adjust this value as needed
 
+                # Create individual subplots with the modifications
+                fig_width = 1800  # Width in pixels
+                fig_height = 600  # Height in pixels
+                title_fontsize = 14  # Title font size
 
-        println("Figure saved as $fig_filename")  
-        json_filename = "$dir_name/$timestamp_str.json"
+                p3 = plot(
+                    x_values, product_weights, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="Product Value", 
+                    title="Product of D and F (d=$d)", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height)
+                )
+
+                p4 = plot(
+                    x_values, weights_IE_mean_history, 
+                    label="IE Mean History", 
+                    xlabel="Time (ms)", 
+                    ylabel="Value", 
+                    title="E->I strength (d=$d) ", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height)
+                )
+
+                # Combine the subplots into one layout
+                p5 = plot(p3, p4, layout = (2,1), size=(fig_width, fig_height*2))
 
 
 
+                # Save the plot as an image
+                savefig(p5,"$dir_name/$timestamp_str+combined.png") 
 
-        param_dict = Dict(
-            "Ncells" => params.Ncells,
-            "Ne" => params.Ne,
-            "Ni" => params.Ni,
-            "T" => params.T,
-            "taue" => params.taue,
-            "taui" => params.taui,
-            "pei" => params.pei,
-            "pie" => params.pie,
-            "pii" => params.pii,
-            "pee" => params.pee,
-            "K" => params.K,
-            "jie_para" => params.jie_para,
-            "jee_para" => params.jee_para,
-            "jei_para" => params.jei_para,
-            "jii_para" => params.jii_para,
-            "Nstim" => params.Nstim,
-            "stimstr_para" => params.stimstr_para,
-            "d" => params.d,
-            "f" => params.f,
-            "stim_duration" => params.stim_duration,
-            "stim_start_time" => params.stim_start_time,
-            "ie_sign"=> params.ie_sign,
-            "ee_sign"=> params.ee_sign,
-            "corr_flag" =>  params.corr_flag
-        )
-
-        # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
+                println("Combined figure saved as $dir_name/$timestamp_str+combined.png") 
 
 
-        JSON3.open(json_filename, "w") do io
-        JSON3.print(io, param_dict)
-        end
+                println("Figure saved as $fig_filename")  
+                json_filename = "$dir_name/$timestamp_str.json"
 
-        println("Parameters saved as $json_filename")
-        println("done")
-        #println(cross_EPSP_EPSP)
-        #println("cross E-E: ", cross_corr_E_E)
+
+
+
+                param_dict = Dict(
+                    "Ncells" => params.Ncells,
+                    "Ne" => params.Ne,
+                    "Ni" => params.Ni,
+                    "T" => params.T,
+                    "taue" => params.taue,
+                    "taui" => params.taui,
+                    "pei" => params.pei,
+                    "pie" => params.pie,
+                    "pii" => params.pii,
+                    "pee" => params.pee,
+                    "K" => params.K,
+                    "jie_para" => params.jie_para,
+                    "jee_para" => params.jee_para,
+                    "jei_para" => params.jei_para,
+                    "jii_para" => params.jii_para,
+                    "Nstim" => params.Nstim,
+                    "stimstr_para" => params.stimstr_para,
+                    "d" => params.d,
+                    "f" => params.f,
+                    "stim_duration" => params.stim_duration,
+                    "stim_start_time" => params.stim_start_time,
+                    "ie_sign"=> params.ie_sign,
+                    "ee_sign"=> params.ee_sign,
+                    "corr_flag" =>  params.corr_flag
+                )
+
+                # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
+
+
+                JSON3.open(json_filename, "w") do io
+                JSON3.print(io, param_dict)
+                end
+
+                println("Parameters saved as $json_filename")
+                println("done")
+                #println(cross_EPSP_EPSP)
+                #println("cross E-E: ", cross_corr_E_E)
 
         end
 

@@ -4,8 +4,16 @@ using Dates  # for generating timestamps
 using JSON3  # Use JSON3 package for JSON handling
 using Random
 using JLD2
+using Distributed
+using SharedArrays
+
+print("Number of threads: ")
+println(Sys.CPU_THREADS - 1)
+addprocs(Sys.CPU_THREADS - 1)
+
 #using Profile
-include("sim_inject_3.0.0.jl")
+@everywhere using SharedArrays
+@everywhere include("sim_inject_3.0.0.jl") 
 
 struct NetworkParameters
     Ncells::Int
@@ -85,7 +93,7 @@ function run_experiment(;
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
         global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic_parallelized(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
             params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag)

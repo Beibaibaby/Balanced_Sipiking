@@ -6,14 +6,17 @@ using Random
 using JLD2
 using Distributed
 using SharedArrays
+using Measures
 
-print("Number of threads: ")
-println(Sys.CPU_THREADS - 1)
-addprocs(Sys.CPU_THREADS - 1)
+#print("Number of threads: ")
+#println(Sys.CPU_THREADS - 1)
+#addprocs(Sys.CPU_THREADS - 1)
 
 #using Profile
-@everywhere using SharedArrays
-@everywhere include("sim_inject_3.0.0.jl") 
+#@everywhere using SharedArrays
+#@everywhere include("sim_inject_3.0.0.jl") 
+using SharedArrays
+include("sim_inject_3.0.0.jl") 
 
 struct NetworkParameters
     Ncells::Int
@@ -93,7 +96,7 @@ function run_experiment(;
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
         global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic_parallelized(
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
             params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag)
@@ -111,9 +114,10 @@ function run_experiment(;
                 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
                 println("creating plot")
-
+           
                 # Define plot size: (width, height)
                 plot_size = (1000, 600) 
+                plot_margin = 50mm
 
                 # Parameters for sliding window
                 window_size = 100  # in ms
@@ -133,10 +137,10 @@ function run_experiment(;
                 
                 if low_plot ##this para control whether focus on the zoom in low activity
                     p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d), (f=$f)", ylim=(0,5))
-                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                 else
                     p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d), (f=$f)")
-                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+                    plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                 end 
                 
                 dir_name = "../figs_paras/$timestamp_str"
@@ -161,7 +165,7 @@ function run_experiment(;
                 
 
 
-                fig_filename = "$dir_name/FR_$timestamp_str.png"
+                fig_filename = "$dir_name/plot_FR_$timestamp_str.png"
                 savefig(p2, fig_filename)
 
                 # Generate scaled x-values
@@ -176,17 +180,19 @@ function run_experiment(;
                 fig_width = 1800  # Width in pixels
                 fig_height = 600  # Height in pixels
                 title_fontsize = 14  # Title font size
+                
 
                 p3 = plot(
-                    x_values, product_weights, 
-                    label="Product over time", 
+                    x_values, weights_EE_mean_history, 
+                    label="EE Mean History", 
                     xlabel="Time (ms)", 
-                    ylabel="Product Value", 
-                    title="Product of D and F (d=$d), (f=$f)", 
+                    ylabel="Value", 
+                    title="E->E strength (d=$d), (f=$f)", 
                     titlefontsize=title_fontsize,
-                    size=(fig_width, fig_height)
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # And also here in pixels
                 )
-
+                
                 p4 = plot(
                     x_values, weights_IE_mean_history, 
                     label="IE Mean History", 
@@ -194,18 +200,54 @@ function run_experiment(;
                     ylabel="Value", 
                     title="E->I strength (d=$d), (f=$f)", 
                     titlefontsize=title_fontsize,
-                    size=(fig_width, fig_height)
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # And also here in pixels
                 )
-
-                # Combine the subplots into one layout
-                p5 = plot(p3, p4, layout = (2,1), size=(fig_width, fig_height*2))
-
-
+                
+                # Now combine the subplots
+                p5 = plot(p3, p4, layout=(2,1), size=(fig_width, fig_height*2))
 
                 # Save the plot as an image
-                savefig(p5,"$dir_name/$timestamp_str+combined.png") 
+                savefig(p5,"$dir_name/plot_syn_$timestamp_str.png") 
 
-                println("Combined figure saved as $dir_name/$timestamp_str+combined.png") 
+                println("Combined figure saved as $dir_name/plot_SYN_$timestamp_str.png") 
+
+                p6 = plot(
+                    x_values, product_weights, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="Product Value", 
+                    title="Product of D and F (d=$d), (f=$f)", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                p7 = plot(
+                    x_values, weights_D_mean, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="D Value", 
+                    title="D factor (d=$d), (f=$f)", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                p8 = plot(
+                    x_values, weights_F_mean, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="F Value", 
+                    title="F factor (d=$d), (f=$f)", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                combined_plot = plot(p6, p7, p8, layout = (3, 1), size = (fig_width*1.2, fig_height*3.2))
+
+                savefig(combined_plot,"$dir_name/plot_DF_$timestamp_str.png") 
 
 
                 println("Figure saved as $fig_filename")  
@@ -354,7 +396,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "1000"))
+T = parse(Int, get_arg("--T", "3000"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -373,7 +415,7 @@ f = parse(Float64, get_arg("--f", "0.92"))
 stim_duration= parse(Int, get_arg("--stim_duration", "0"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
 
-ie_sign = parse(Bool, get_arg("--ie_sign", "false")) #controal E->I is dynamic or not 
+ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime

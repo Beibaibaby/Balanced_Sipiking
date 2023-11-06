@@ -148,10 +148,10 @@ function run_experiment(;
                 # Add a code to detect low rate or not 
                 
                 if low_plot ##this para control whether focus on the zoom in low activity
-                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d), (f=$f)", ylim=(0,5))
+                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise)", ylim=(0,5))
                     plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                 else
-                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d=$d), (f=$f)")
+                    p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise)")
                     plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                 end 
                 

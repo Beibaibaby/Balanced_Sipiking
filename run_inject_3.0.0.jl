@@ -7,6 +7,7 @@ using JLD2
 using Distributed
 using SharedArrays
 using Measures
+using Distributions
 
 #print("Number of threads: ")
 #println(Sys.CPU_THREADS - 1)
@@ -43,6 +44,9 @@ struct NetworkParameters
     ie_sign::Bool
     ee_sign::Bool
     corr_flag::Bool
+    add_noise::Bool
+    lambda_noise::Float64
+    scale_noise::Float64
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -104,7 +108,7 @@ function run_experiment(;
         times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
-            params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag
+            params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
             params.add_noise,
             params.lambda_noise,
             params.scale_noise)

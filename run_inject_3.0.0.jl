@@ -83,7 +83,8 @@ function run_experiment(;
     low_plot,
     add_noise,
     lambda_noise,
-    scale_noise
+    scale_noise,
+    env
 )
         
         doplot = true
@@ -150,7 +151,15 @@ function run_experiment(;
                     plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                 end 
                 
-                dir_name = "../figs_paras/$timestamp_str"
+                if env == 1
+                    dir_name ="/root/autodl-tmp/$timestamp_str"
+                elseif env == 2
+                   dir_name = "../figs_paras/$timestamp_str"
+                else
+                    dir_name = "../figs_paras/$timestamp_str"
+                end
+
+                
                 #Create the directory for results
                 if !isdir(dir_name)
                     mkdir(dir_name)
@@ -422,7 +431,7 @@ low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully
 lambda_noise = parse(Float64, get_arg("--lambda_noise", "2.0"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "0.7"))
-
+env = scale_noise = parse(Int, get_arg("--env", "1"))
 
 run_experiment(;Ncells,
     Ne,
@@ -451,5 +460,6 @@ run_experiment(;Ncells,
     low_plot,
     add_noise,
     lambda_noise,
-    scale_noise
+    scale_noise,
+    env
 )

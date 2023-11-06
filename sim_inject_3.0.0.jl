@@ -12,6 +12,11 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     Ncells = Ne+Ni
     sqrtK = sqrt(K)
+    print("noise level is ")
+    println(lambda_noise)
+
+    print("noise lamba is ")
+    println(scale_noise)
 
     # Synaptic weights
     jie = jie_para / (taui * sqrtK)

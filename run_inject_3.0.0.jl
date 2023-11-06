@@ -98,8 +98,10 @@ function run_experiment(;
         #Setting the parameters
         ############################
         # Now, use the provided values to create an instance of the struct:
+        
         params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
         lambda_noise,scale_noise)
+
 
         #store it
         #run the stimulus
@@ -433,8 +435,9 @@ corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and pl
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
-scale_noise = parse(Float64, get_arg("--scale_noise", "0.7"))
-env = scale_noise = parse(Int, get_arg("--env", "1"))
+scale_noise = parse(Float64, get_arg("--scale_noise", "0.4"))
+env = parse(Int, get_arg("--env", "1"))
+print(lambda_noise)
 
 run_experiment(;Ncells,
     Ne,

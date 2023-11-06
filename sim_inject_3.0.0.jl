@@ -5,7 +5,7 @@ using Statistics
 using ProgressMeter
 
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
-    jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag)
+    jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,add_noise,lambda_noise,scale_noise)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -190,6 +190,11 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
             if (ci < Nstim) && (t > stimstart) && (t < stimend)
                 synInput += stimstr
+            end
+            
+            if add_noise
+               poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt))  
+               synInput += poisson_noise
             end
            
             if t > (lastSpike[ci] + refrac)
@@ -497,8 +502,6 @@ end
     
     return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean, weights_IE_mean_history, weights_EE_mean_history
 end
-
-
 
 
 

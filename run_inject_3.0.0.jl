@@ -80,7 +80,10 @@ function run_experiment(;
     ie_sign,
     ee_sign,
     corr_flag,
-    low_plot
+    low_plot,
+    add_noise,
+    lambda_noise,
+    scale_noise
 )
         
         doplot = true
@@ -90,7 +93,8 @@ function run_experiment(;
         #Setting the parameters
         ############################
         # Now, use the provided values to create an instance of the struct:
-        params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag)
+        params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
+        lambda_noise,scale_noise)
 
         #store it
         #run the stimulus
@@ -99,7 +103,10 @@ function run_experiment(;
         times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
-            params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag)
+            params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag
+            params.add_noise,
+            params.lambda_noise,
+            params.scale_noise)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
         product_weights = weights_D_mean .* weights_F_mean
@@ -280,7 +287,11 @@ function run_experiment(;
                     "stim_start_time" => params.stim_start_time,
                     "ie_sign"=> params.ie_sign,
                     "ee_sign"=> params.ee_sign,
-                    "corr_flag" =>  params.corr_flag
+                    "corr_flag" =>  params.corr_flag,
+                    "low_plot" => params.low_plot,
+                    "lambda_noise" => params.lambda_noise,
+                    "add_noise" => params.add_noise,
+                    "scale_noise" => params.scale_noise
                 )
 
                 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -299,91 +310,80 @@ function run_experiment(;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
         if do_v_corr #if compute the correlation
 
-        EPSP_EPSP_pool=v_history[1:100,end-9999:end]
-        TT_pool=v_history[501:600,end-9999:end]
-        IPSP_IPSP_pool=v_history[1001:1100,end-9999:end]
+            EPSP_EPSP_pool=v_history[1:100,end-9999:end]
+            TT_pool=v_history[501:600,end-9999:end]
+            IPSP_IPSP_pool=v_history[1001:1100,end-9999:end]
 
-        IPSP_IPSP_pool= IPSP_IPSP_pool .- 2
-        TT_pool=TT_pool .- 1
-        EPSP_EPSP_pool=EPSP_EPSP_pool .+ 0.2
+            IPSP_IPSP_pool= IPSP_IPSP_pool .- 2
+            TT_pool=TT_pool .- 1
+            EPSP_EPSP_pool=EPSP_EPSP_pool .+ 0.2
 
-        # Initialize accumulators
-        EPSP_EPSP_accumulator = zeros(100, 10000)
-        TT_accumulator = zeros(100, 10000)
-        IPSP_IPSP_accumulator = zeros(100, 10000)
+            # Initialize accumulators
+            EPSP_EPSP_accumulator = zeros(100, 10000)
+            TT_accumulator = zeros(100, 10000)
+            IPSP_IPSP_accumulator = zeros(100, 10000)
 
-        if do_repeat_v_corr
+            if do_repeat_v_corr
 
-        n_run=20
-        for iter in 1:n_run
-            println("Current iteration: $iter")  # This line prints the current iteration number
-            local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-            times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
+            n_run=20
+            for iter in 1:n_run
+                println("Current iteration: $iter")  # This line prints the current iteration number
+                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
+                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
 
-            EPSP_EPSP_pool = v_history[1:100, end-9999:end]
-            TT_pool = v_history[501:600, end-9999:end]
-            IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
-            
-            IPSP_IPSP_pool = IPSP_IPSP_pool .- 1 #hard?
-            TT_pool = TT_pool .- 1
-            EPSP_EPSP_pool = EPSP_EPSP_pool .+ 0.2
-            
-            # Add to accumulator
-            EPSP_EPSP_accumulator .+= EPSP_EPSP_pool
-            TT_accumulator .+= TT_pool
-            IPSP_IPSP_accumulator .+= IPSP_IPSP_pool
-        end
+                EPSP_EPSP_pool = v_history[1:100, end-9999:end]
+                TT_pool = v_history[501:600, end-9999:end]
+                IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
+                
+                IPSP_IPSP_pool = IPSP_IPSP_pool .- 1 #hard?
+                TT_pool = TT_pool .- 1
+                EPSP_EPSP_pool = EPSP_EPSP_pool .+ 0.2
+                
+                # Add to accumulator
+                EPSP_EPSP_accumulator .+= EPSP_EPSP_pool
+                TT_accumulator .+= TT_pool
+                IPSP_IPSP_accumulator .+= IPSP_IPSP_pool
+            end
 
-        # Compute the average
-        EPSP_EPSP_avg = EPSP_EPSP_accumulator ./ n_run
-        TT_avg = TT_accumulator ./ n_run
-        IPSP_IPSP_avg = IPSP_IPSP_accumulator ./ n_run
+            # Compute the average
+            EPSP_EPSP_avg = EPSP_EPSP_accumulator ./ n_run
+            TT_avg = TT_accumulator ./ n_run
+            IPSP_IPSP_avg = IPSP_IPSP_accumulator ./ n_run
 
-        IPSP_IPSP_pool= EPSP_EPSP_avg
-        TT_pool=TT_avg
-        EPSP_EPSP_pool=IPSP_IPSP_avg
+            IPSP_IPSP_pool= EPSP_EPSP_avg
+            TT_pool=TT_avg
+            EPSP_EPSP_pool=IPSP_IPSP_avg
 
-        end
-
-
-        avg_correlation_E_I=compute_correlation(E_input, I_input)
-        avg_correlation_E_E=compute_correlation(E_input, E_input)
-        avg_correlation_I_I=compute_correlation(I_input, I_input)
-        cross_corr_E_E=compute_cross_correlation(E_input[:, end-999:end], E_input[:, end-999:end])
-        cross_corr_I_I=compute_cross_correlation(I_input[:, end-999:end], I_input[:, end-999:end])
-        cross_corr_E_I=compute_cross_correlation(E_input[:, end-999:end], I_input[:, end-999:end])
-        cross_corr_I_E=compute_cross_correlation(I_input[:, end-999:end], E_input[:, end-999:end])
+            end
 
 
-        println("avg correlation(E-I): ", avg_correlation_E_I)
-        println("avg correlation(E-E): ", avg_correlation_E_E)
-        println("avg correlation(I-I): ", avg_correlation_I_I)
+            avg_correlation_E_I=compute_correlation(E_input, I_input)
+            avg_correlation_E_E=compute_correlation(E_input, E_input)
+            avg_correlation_I_I=compute_correlation(I_input, I_input)
+            cross_corr_E_E=compute_cross_correlation(E_input[:, end-999:end], E_input[:, end-999:end])
+            cross_corr_I_I=compute_cross_correlation(I_input[:, end-999:end], I_input[:, end-999:end])
+            cross_corr_E_I=compute_cross_correlation(E_input[:, end-999:end], I_input[:, end-999:end])
+            cross_corr_I_E=compute_cross_correlation(I_input[:, end-999:end], E_input[:, end-999:end])
 
-        cross_EPSP_EPSP=compute_cross_correlation(EPSP_EPSP_pool,EPSP_EPSP_pool)
-        cross_IPSP_IPSP=compute_cross_correlation(IPSP_IPSP_pool,IPSP_IPSP_pool)
-        cross_EPSP_IPSP=compute_cross_correlation(EPSP_EPSP_pool,IPSP_IPSP_pool)
-        cross_IPSP_EPSP=compute_cross_correlation(IPSP_IPSP_pool,EPSP_EPSP_pool)
-        cross_T_T=compute_cross_correlation(TT_pool,TT_pool)
 
-        #plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
-        plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP)
+            println("avg correlation(E-I): ", avg_correlation_E_I)
+            println("avg correlation(E-E): ", avg_correlation_E_E)
+            println("avg correlation(I-I): ", avg_correlation_I_I)
 
-        plot_cells(v_history, [1, 505, 1005])
+            cross_EPSP_EPSP=compute_cross_correlation(EPSP_EPSP_pool,EPSP_EPSP_pool)
+            cross_IPSP_IPSP=compute_cross_correlation(IPSP_IPSP_pool,IPSP_IPSP_pool)
+            cross_EPSP_IPSP=compute_cross_correlation(EPSP_EPSP_pool,IPSP_IPSP_pool)
+            cross_IPSP_EPSP=compute_cross_correlation(IPSP_IPSP_pool,EPSP_EPSP_pool)
+            cross_T_T=compute_cross_correlation(TT_pool,TT_pool)
 
-        println("finish")
+            #plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
+            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP)
+
+            plot_cells(v_history, [1, 505, 1005])
+
+            println("finish")
 
         end
 
@@ -408,17 +408,21 @@ jie = parse(Float64, get_arg("--jie", "4.0"))
 jei = parse(Float64, get_arg("--jei", string(-18.0 * 1.2)))
 jii = parse(Float64, get_arg("--jii", "-16.0"))
 jee = parse(Float64, get_arg("--jee", "10.0"))
-Nstim = parse(Int, get_arg("--Nstim", "0"))
+Nstim = parse(Int, get_arg("--Nstim", "4000"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "0"))
+stim_duration= parse(Int, get_arg("--stim_duration", "2"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
+lambda_noise = parse(Float64, get_arg("--lambda_noise", "2.0"))
+add_noise = parse(Bool, get_arg("--add_noise", "true"))
+scale_noise = parse(Float64, get_arg("--scale_noise", "0.7"))
+
 
 run_experiment(;Ncells,
     Ne,
@@ -444,5 +448,8 @@ run_experiment(;Ncells,
     ie_sign,
     ee_sign,
     corr_flag,
-    low_plot
+    low_plot,
+    add_noise,
+    lambda_noise,
+    scale_noise
 )

@@ -1,4 +1,5 @@
 using Pkg
+Pkg.add("Distributions")
 #Pkg.add("ProgressMeter")
 #Pkg.add("Plots")
 #Pkg.add("JSON3")
@@ -6,4 +7,4 @@ using Pkg
 #Pkg.add("Measures")
 #Pkg.add("JLD2")
 #Pkg.add("SharedArrays")
-Pkg.add("Distributed")
+#Pkg.add("Distributed")

@@ -301,7 +301,6 @@ function run_experiment(;
                     "ie_sign"=> params.ie_sign,
                     "ee_sign"=> params.ee_sign,
                     "corr_flag" =>  params.corr_flag,
-                    "low_plot" => params.low_plot,
                     "lambda_noise" => params.lambda_noise,
                     "add_noise" => params.add_noise,
                     "scale_noise" => params.scale_noise
@@ -432,7 +431,7 @@ ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
-lambda_noise = parse(Float64, get_arg("--lambda_noise", "2.0"))
+lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "0.7"))
 env = scale_noise = parse(Int, get_arg("--env", "1"))

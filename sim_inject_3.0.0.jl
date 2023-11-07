@@ -161,6 +161,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         W_sub_view_ee = @view weights[1:Ne, 1:Ne]
         weights_EE_mean_history[ti] = mean(W_sub_view_ee)
 
+        poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt)) 
 
         for ci = 1:Ncells
             
@@ -198,7 +199,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             end
             
             if add_noise
-               poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt))  
+                
                synInput += poisson_noise
             end
            

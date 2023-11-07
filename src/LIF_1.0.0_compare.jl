@@ -60,7 +60,9 @@ function plot_LIF_simulation(time, Vs, spike_times, S_input, filename)
     savefig(p, filename)
 end
 
-function simulate_LIF_neuron_fixed_F(A, d, f, tau_d, tau_f, dt, T, S_input)
+
+
+function simulate_LIF_neuron_fixed_F(A, d, f_ie, tau_d, tau_f, dt, T, S_input)
     τ_m = 10.0       
     V_thresh = -50.0  
     V_reset = -75.0   
@@ -91,13 +93,17 @@ function simulate_LIF_neuron_fixed_F(A, d, f, tau_d, tau_f, dt, T, S_input)
                 push!(Hs, V - prev_V)
             end
             D *= d  
+            F += f_ie
             # No change in F as it is fixed at 1.0
         end
 
         dD = (1 - D) / tau_d
         D += dD * dt
-    
+        
         # No change in F as it is fixed at 1.0
+
+        dF = (1 - F) / tau_f
+        F += dF * dt
         
         prev_V = V
         push!(Vs, V)
@@ -137,9 +143,13 @@ function generate_spike_train(T, dt, initial_spike_time, tf)
 end
 
 # Example usage
-A = 20.0        # fixed parameter A
-d = 0.15       # depression fraction upon a spike
-f = 0.92         # facilitation increment upon a spike
+A = 20.0         # fixed parameter A
+d = 0.15         # depression fraction upon a spike (default setting)
+f = 0.92         # facilitation increment upon a spike (default setting)
+f_ie = 0.0      # Adding facilitation into E->I (but samll)
+d = 0.01
+f = 1.08
+
 tau_d = 103.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
 dt = 1.0        # time step (ms)
@@ -165,7 +175,7 @@ plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)
 using Plots
 
 # Example temporal_frequencies
-temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25,30,40,50,60,75,80,100]
+temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25,30,40,50,60,75,80,100,110,130, 150]
 #temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25, 30,35, 40]
 # Initialize an empty array to store results
 depression_ratios = []
@@ -193,7 +203,7 @@ depression_ratios_fixed_F = []
 for tf in temporal_frequencies
     global S_input, time, Vs, spike_times, Hs, depression_ratio
     S_input = generate_spike_train(T, dt, first_spike_time, tf)
-    time, Vs, spike_times, Hs = simulate_LIF_neuron_fixed_F(A, d, f, tau_d, tau_f, dt, T, S_input)
+    time, Vs, spike_times, Hs = simulate_LIF_neuron_fixed_F(A, d, f_ie, tau_d, tau_f, dt, T, S_input)
     if length(Hs) >= 2
         depression_ratio = Hs[2] / Hs[1]
         push!(depression_ratios_fixed_F, depression_ratio)

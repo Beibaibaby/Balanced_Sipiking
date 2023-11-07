@@ -116,16 +116,23 @@ function run_experiment(;
             params.scale_noise)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
+        
         product_weights = weights_D_mean .* weights_F_mean
-
-
+        timestamp = Dates.now()
+        timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+        if env == 1
+            dir_name ="/root/autodl-tmp/$timestamp_str"
+        elseif env == 2
+           dir_name = "../figs_paras/$timestamp_str"
+        else
+            dir_name = "../figs_paras/$timestamp_str"
+        end
 
 
         if doplot 
 
             # Generate a timestamp for unique filenames
-                timestamp = Dates.now()
-                timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+
 
                 println("creating plot")
            
@@ -134,7 +141,7 @@ function run_experiment(;
                 plot_margin = 50mm
 
                 # Parameters for sliding window
-                window_size = 100  # in ms
+                window_size = 20  # in ms
                 step_size = 5     # in ms
 
                 #print(Ne)
@@ -150,10 +157,10 @@ function run_experiment(;
                 # Add a code to detect low rate or not 
                 if add_noise
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise)", ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)", ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise)")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 else
@@ -166,13 +173,7 @@ function run_experiment(;
                     end 
                 end
                 
-                if env == 1
-                    dir_name ="/root/autodl-tmp/$timestamp_str"
-                elseif env == 2
-                   dir_name = "../figs_paras/$timestamp_str"
-                else
-                    dir_name = "../figs_paras/$timestamp_str"
-                end
+
 
                 
                 #Create the directory for results
@@ -353,9 +354,15 @@ function run_experiment(;
             n_run=20
             for iter in 1:n_run
                 println("Current iteration: $iter")  # This line prints the current iteration number
-                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights=sim_working(params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para)
-
+                local EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
+                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
+                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
+                    params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
+                    params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
+                    params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
+                    params.add_noise,
+                    params.lambda_noise,
+                    params.scale_noise)
                 EPSP_EPSP_pool = v_history[1:100, end-9999:end]
                 TT_pool = v_history[501:600, end-9999:end]
                 IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
@@ -402,7 +409,7 @@ function run_experiment(;
             cross_T_T=compute_cross_correlation(TT_pool,TT_pool)
 
             #plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
-            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP)
+            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP,"$dir_name/plot_corr_PSP_mem.png")
 
             plot_cells(v_history, [1, 505, 1005])
 
@@ -435,8 +442,8 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "3"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
+stim_duration= parse(Int, get_arg("--stim_duration", "5"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "400"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 

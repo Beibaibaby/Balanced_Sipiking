@@ -5,7 +5,7 @@ using Statistics
 using ProgressMeter
 
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
-    jei_para,jii_para,jee_para,d,f,stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,add_noise,lambda_noise,scale_noise)
+    jei_para,jii_para,jee_para, d,f, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,add_noise,lambda_noise,scale_noise)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -1120,7 +1120,7 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_
  
 end
 
-function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, cross_corr_E_I, cross_corr_I_E)
+function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, cross_corr_E_I, cross_corr_I_E, output_file)
     # Assuming the dictionaries have the same keys
     sorted_keys = sort(collect(keys(cross_corr_E_E)))
     
@@ -1130,18 +1130,22 @@ function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, c
     sorted_values_E_I = [cross_corr_E_I[k] for k in sorted_keys]
     sorted_values_I_E = [cross_corr_I_E[k] for k in sorted_keys]
 
+    # Create the plot
     plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright)
     plot!(sorted_keys, sorted_values_I_I, label="I-I", linewidth=2, marker=:circle, color=:red)
     plot!(sorted_keys, sorted_values_E_I, label="E-I", linewidth=2, marker=:circle, color=:yellow)
     plot!(sorted_keys, sorted_values_I_E, label="I-E", linewidth=2, marker=:circle, color=:orange)
     plot!(sorted_keys, sorted_values_T_T, label="T-T", linewidth=2, marker=:circle, color=:green)
 
+    # Set labels and title
     xlabel!("Tau")
     ylabel!("Correlation")
     title!("Cross-correlation")
-    savefig("cross_correlation_plot_PSP_mem.png")
 
+    # Save the figure to the specified output file
+    savefig(output_file)
 end
+
 
 function plot_cells(v_history, cells)
     p = plot(layout=(3,1), size=(600,800))

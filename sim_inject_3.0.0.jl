@@ -12,11 +12,14 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     Ncells = Ne+Ni
     sqrtK = sqrt(K)
-    print("noise level is ")
-    println(lambda_noise)
+    if add_noise
 
-    print("noise lamba is ")
-    println(scale_noise)
+       print("noise level is ")
+       println(lambda_noise)
+
+       print("noise lamba is ")
+       println(scale_noise)
+    end
 
     # Synaptic weights
     jie = jie_para / (taui * sqrtK)
@@ -160,8 +163,15 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         weights_IE_mean_history[ti] = mean(W_sub_view_ie)
         W_sub_view_ee = @view weights[1:Ne, 1:Ne]
         weights_EE_mean_history[ti] = mean(W_sub_view_ee)
-
-        poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt)) 
+        
+        if add_noise
+           poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt)) 
+      
+           if poisson_noise>0
+               println("pulse")
+               print(ti)
+           end
+        end
 
         for ci = 1:Ncells
             

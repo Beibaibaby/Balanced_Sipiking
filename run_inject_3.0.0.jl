@@ -426,7 +426,7 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "2"))
+stim_duration= parse(Int, get_arg("--stim_duration", "3"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "1000"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
@@ -434,7 +434,7 @@ ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
-add_noise = parse(Bool, get_arg("--add_noise", "true"))
+add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "0.4"))
 env = parse(Int, get_arg("--env", "1"))
 print(lambda_noise)

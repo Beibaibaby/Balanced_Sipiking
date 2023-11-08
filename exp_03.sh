@@ -15,9 +15,7 @@
 d=0.01
 f=0.98
 T=3000
-env=2
-stim_start_time=400
-stim_duration=5
+c
 
 # Array of stimstr values
 stimstr_values=(0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)

@@ -182,18 +182,18 @@ function run_experiment(;
                 end
                 
                 @save "$dir_name/times.jld2" times
-                @save "$dir_name/ns.jld2" ns
-                @save "$dir_name/Ne.jld2" Ne
-                @save "$dir_name/Ncells.jld2" Ncells
-                @save "$dir_name/T.jld2" T
-                @save "$dir_name/v_history.jld2" v_history
-                @save "$dir_name/E_input.jld2" E_input
-                @save "$dir_name/I_input.jld2" I_input
-                @save "$dir_name/weights.jld2" weights
-                @save "$dir_name/weights_D_mean.jld2" weights_D_mean
-                @save "$dir_name/weights_F_mean.jld2" weights_F_mean
-                @save "$dir_name/weights_IE_mean_history.jld2" weights_IE_mean_history
-                @save "$dir_name/weights_EE_mean_history.jld2" weights_EE_mean_history
+                #@save "$dir_name/ns.jld2" ns
+                #@save "$dir_name/Ne.jld2" Ne
+                #@save "$dir_name/Ncells.jld2" Ncells
+                #@save "$dir_name/T.jld2" T
+                #@save "$dir_name/v_history.jld2" v_history
+                #@save "$dir_name/E_input.jld2" E_input
+                #@save "$dir_name/I_input.jld2" I_input
+                #@save "$dir_name/weights.jld2" weights
+                #@save "$dir_name/weights_D_mean.jld2" weights_D_mean
+                #@save "$dir_name/weights_F_mean.jld2" weights_F_mean
+                #@save "$dir_name/weights_IE_mean_history.jld2" weights_IE_mean_history
+                #@save "$dir_name/weights_EE_mean_history.jld2" weights_EE_mean_history
                 
 
 

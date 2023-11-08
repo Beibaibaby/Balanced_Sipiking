@@ -442,7 +442,7 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "5"))
+stim_duration= parse(Int, get_arg("--stim_duration", "3"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "400"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
@@ -452,8 +452,7 @@ low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully
 lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
 add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "0.4"))
-env = parse(Int, get_arg("--env", "1"))
-print(lambda_noise)
+env = parse(Int, get_arg("--env", "2"))
 
 run_experiment(;Ncells,
     Ne,

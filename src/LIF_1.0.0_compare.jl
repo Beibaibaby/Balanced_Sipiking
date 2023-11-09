@@ -147,8 +147,8 @@ A = 20.0         # fixed parameter A
 d = 0.15         # depression fraction upon a spike (default setting)
 f = 0.92         # facilitation increment upon a spike (default setting)
 f_ie = 0.0      # Adding facilitation into E->I (but samll)
-d = 0.01
-f = 0.98
+d = 0.24
+f = 0.0
 
 tau_d = 103.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
@@ -216,8 +216,8 @@ end
 
 # Plot results
 using Plots
-plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", ylabel="Depression Ratio", label="With Facilitation", marker=:circle, markercolor=:orange,linewidth=2, linecolor=:orange)
-plot!(temporal_frequencies, depression_ratios_fixed_F, label="No Facilitation", marker=:circle, linewidth=2, linecolor=:purple,markercolor=:purple)
+plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", title = "d=$d f=$f", ylabel="Depression Ratio", label="E->E", marker=:circle, markercolor=:orange,linewidth=2, linecolor=:orange)
+plot!(temporal_frequencies, depression_ratios_fixed_F, label="E->I", marker=:circle, linewidth=2, linecolor=:purple,markercolor=:purple)
 
 # Save figure
 savefig("depression_ratio_vs_temporal_frequency_compare.png")

@@ -426,7 +426,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "1500"))
+T = parse(Int, get_arg("--T", "1000"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -442,7 +442,7 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 d = parse(Float64, get_arg("--d", "0.15"))
 f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "3"))
+stim_duration= parse(Int, get_arg("--stim_duration", "8"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "400"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 

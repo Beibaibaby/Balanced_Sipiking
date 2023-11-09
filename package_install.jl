@@ -1,5 +1,5 @@
 using Pkg
-Pkg.add("Distributions")
+#Pkg.add("Distributions")
 #Pkg.add("ProgressMeter")
 #Pkg.add("Plots")
 #Pkg.add("JSON3")
@@ -8,3 +8,5 @@ Pkg.add("Distributions")
 #Pkg.add("JLD2")
 #Pkg.add("SharedArrays")
 #Pkg.add("Distributed")
+Pkg.update()
+Pkg.build("GR")

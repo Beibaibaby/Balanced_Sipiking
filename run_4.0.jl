@@ -511,7 +511,7 @@ d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "-2.0"))
-stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "5"))
+stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "50"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "600"))
 
 

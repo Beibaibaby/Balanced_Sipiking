@@ -17,7 +17,7 @@ using Distributions
 #@everywhere using SharedArrays
 #@everywhere include("sim_inject_3.0.0.jl") 
 using SharedArrays
-include("sim_4.0.jl") 
+include("sim_demo.jl") 
 
 struct NetworkParameters
     Ncells::Int
@@ -481,7 +481,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "800"))
+T = parse(Int, get_arg("--T", "200"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))

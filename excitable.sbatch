@@ -12,16 +12,16 @@
 #SBATCH --array=1-5%5
 
 # Define an array of f_ie values
-f_ie_values=(0.1 0.2 0.03 0.05 0.3)
+f_ie_values=(0.5 0.6 0.7 0.8 0.9)
 
 # Get the f_ie value for the current task
 f_ie_index=$(($SLURM_ARRAY_TASK_ID - 1))
 f_ie=${f_ie_values[$f_ie_index]}
 
 # Fixed parameters
-d_ee=0.95
-f_ee=0.0
-d_ie=0.95
+d_ee=0.1
+f_ee=0.1
+d_ie=0.15
 stimstr=0.7
 
 T=1000

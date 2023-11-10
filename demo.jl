@@ -496,8 +496,8 @@ jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "4000"))
 
 
-ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
-ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
+ie_sign = parse(Bool, get_arg("--ie_sign", "false")) #controal E->I is dynamic or not 
+ee_sign = parse(Bool, get_arg("--ee_sign", "false")) #controal E->E is dynamic or not 
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))

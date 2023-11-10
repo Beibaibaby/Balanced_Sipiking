@@ -180,6 +180,7 @@ function run_experiment(;
                     end 
                 end
                 
+                
 
 
                 
@@ -187,6 +188,8 @@ function run_experiment(;
                 if !isdir(dir_name)
                     mkdir(dir_name)
                 end
+
+                plot_curve(d_ee, f_ee, d_ie, f_ie, "$dir_name/plot_curve_$timestamp_str.png")
                 
                 @save "$dir_name/times.jld2" times
                 #@save "$dir_name/ns.jld2" ns
@@ -478,7 +481,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "1500"))
+T = parse(Int, get_arg("--T", "1000"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -492,9 +495,6 @@ jii = parse(Float64, get_arg("--jii", "-16.0"))
 jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "4000"))
 
-stimstr = parse(Float64, get_arg("--stimstr", "1.7"))
-stim_duration= parse(Int, get_arg("--stim_duration", "5"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
@@ -510,7 +510,11 @@ f_ee = parse(Float64, get_arg("--f_ee", "0.92"))
 d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
-stimstr_2 = parse(Float64, get_arg("--stimstr_2", "-2.0"))
+stimstr = parse(Float64, get_arg("--stimstr", "-10"))
+stim_duration= parse(Int, get_arg("--stim_duration", "50"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
+
+stimstr_2 = parse(Float64, get_arg("--stimstr_2", "-50"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "50"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "600"))
 

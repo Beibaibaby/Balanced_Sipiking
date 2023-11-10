@@ -12,16 +12,16 @@
 #SBATCH --array=1-5%5
 
 # Define an array of stimstr_2 values
-stimstr_2_values=(-1.7 -5 -10 -20 -30)
+stimstr_2_values=(-1.7 -5.0 -10 -25 -50)
 
 # Get the stimstr_2 value for the current task
 stimstr_2_index=$(($SLURM_ARRAY_TASK_ID - 1))
 stimstr_2=${stimstr_2_values[$stimstr_2_index]}
 
 # Fixed parameters
-d_ee=0.2
-f_ee=0.85
-d_ie=0.2
+d_ee=0.95
+f_ee=0.01
+d_ie=0.25
 f_ie=0.0
 
 # Run the Julia script with the current parameters

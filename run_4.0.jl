@@ -37,8 +37,6 @@ struct NetworkParameters
     jee_para::Float64
     Nstim::Int
     stimstr_para::Float64
-    d::Float64
-    f::Float64
     stim_duration::Int
     stim_start_time::Int
     ie_sign::Bool
@@ -47,6 +45,10 @@ struct NetworkParameters
     add_noise::Bool
     lambda_noise::Float64
     scale_noise::Float64
+    d_ee::Float64
+    f_ee::Float64
+    d_ie::Float64
+    f_ie::Float64
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -77,8 +79,6 @@ function run_experiment(;
     jee,
     Nstim,
     stimstr,
-    d,
-    f,
     stim_duration,
     stim_start_time,
     ie_sign,
@@ -88,7 +88,11 @@ function run_experiment(;
     add_noise,
     lambda_noise,
     scale_noise,
-    env
+    env,
+    d_ee,
+    f_ee,
+    d_ie,
+    f_ie
 )
         
         doplot = true
@@ -99,36 +103,31 @@ function run_experiment(;
         ############################
         # Now, use the provided values to create an instance of the struct:
         
-        params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,d,f,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
-        lambda_noise,scale_noise)
-
+        params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
+        lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie)
 
         #store it
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-        global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
+        global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
-            params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
-            params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-            params.add_noise,
-            params.lambda_noise,
-            params.scale_noise)
+            params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
+            params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
+            params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
         
-        product_weights = weights_D_mean .* weights_F_mean
+        product_weights_ee = weights_D_ee_track .* weights_F_ee_track
         timestamp = Dates.now()
         timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
-        if env == 1
-            dir_name ="/root/autodl-tmp/$timestamp_str"
+        if env == 1 
+            dir_name ="/root/autodl-tmp/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
         elseif env == 2
-           dir_name = "../figs_paras/$timestamp_str"
+           dir_name = "../figs_paras/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
         else
-            dir_name = "/gpfs/data/doiron-lab/draco/results/d=$d+f=$f+$timestamp_str"
+            dir_name = "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
         end
-
-
 
         if doplot 
 
@@ -158,18 +157,18 @@ function run_experiment(;
                 # Add a code to detect low rate or not 
                 if add_noise
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)", ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)", ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 else
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f stim=$stimstr)", ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr)", ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d=$d f=$f stim=$stimstr)")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr)")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 end
@@ -191,8 +190,8 @@ function run_experiment(;
                 #@save "$dir_name/E_input.jld2" E_input
                 #@save "$dir_name/I_input.jld2" I_input
                 #@save "$dir_name/weights.jld2" weights
-                #@save "$dir_name/weights_D_mean.jld2" weights_D_mean
-                #@save "$dir_name/weights_F_mean.jld2" weights_F_mean
+                #@save "$dir_name/weights_D_ee_track.jld2" weights_D_ee_track
+                #@save "$dir_name/weights_F_ee_track.jld2" weights_F_ee_track
                 #@save "$dir_name/weights_IE_mean_history.jld2" weights_IE_mean_history
                 #@save "$dir_name/weights_EE_mean_history.jld2" weights_EE_mean_history
                 
@@ -202,7 +201,7 @@ function run_experiment(;
                 savefig(p2, fig_filename)
 
                 # Generate scaled x-values
-                x_values = 0:0.1:(length(product_weights) - 1) * 0.1
+                x_values = 0:0.1:(length(product_weights_ee) - 1) * 0.1
 
                 # Create individual subplots
                 # Adjust title font size and margins for the plots
@@ -220,7 +219,7 @@ function run_experiment(;
                     label="EE Mean History", 
                     xlabel="Time (ms)", 
                     ylabel="Value", 
-                    title="E->E strength (d=$d), (f=$f)", 
+                    title="E->E strength d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
                     titlefontsize=title_fontsize,
                     size=(fig_width, fig_height),
                     left_margin=plot_margin # And also here in pixels
@@ -231,7 +230,7 @@ function run_experiment(;
                     label="IE Mean History", 
                     xlabel="Time (ms)", 
                     ylabel="Value", 
-                    title="E->I strength (d=$d), (f=$f)", 
+                    title="E->I strength d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
                     titlefontsize=title_fontsize,
                     size=(fig_width, fig_height),
                     left_margin=plot_margin # And also here in pixels
@@ -246,33 +245,33 @@ function run_experiment(;
                 println("Combined figure saved as $dir_name/plot_SYN_$timestamp_str.png") 
 
                 p6 = plot(
-                    x_values, product_weights, 
+                    x_values, product_weights_ee, 
                     label="Product over time", 
                     xlabel="Time (ms)", 
                     ylabel="Product Value", 
-                    title="Product of D and F (d=$d), (f=$f)", 
+                    title="Product of D and F (EE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
                     titlefontsize=title_fontsize,
                     size=(fig_width, fig_height),
                     left_margin=plot_margin # Apply the margin adjustment here in pixels
                 )
 
                 p7 = plot(
-                    x_values, weights_D_mean, 
+                    x_values, weights_D_ee_track, 
                     label="Product over time", 
                     xlabel="Time (ms)", 
                     ylabel="D Value", 
-                    title="D factor (d=$d), (f=$f)", 
+                    title="D factor (EE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie ", 
                     titlefontsize=title_fontsize,
                     size=(fig_width, fig_height),
                     left_margin=plot_margin # Apply the margin adjustment here in pixels
                 )
 
                 p8 = plot(
-                    x_values, weights_F_mean, 
+                    x_values, weights_F_ee_track, 
                     label="Product over time", 
                     xlabel="Time (ms)", 
                     ylabel="F Value", 
-                    title="F factor (d=$d), (f=$f)", 
+                    title="F factor (EE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
                     titlefontsize=title_fontsize,
                     size=(fig_width, fig_height),
                     left_margin=plot_margin # Apply the margin adjustment here in pixels
@@ -280,12 +279,53 @@ function run_experiment(;
 
                 combined_plot = plot(p6, p7, p8, layout = (3, 1), size = (fig_width*1.2, fig_height*3.2))
 
-                savefig(combined_plot,"$dir_name/plot_DF_$timestamp_str.png") 
+                savefig(combined_plot,"$dir_name/plot_DF_EE_$timestamp_str.png") 
+                
 
+                product_weights_ie = weights_D_ie_track .* weights_F_ie_track
+
+                p9 = plot(
+                    x_values, product_weights_ie, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="Product Value", 
+                    title="Product of D and F (IE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                p10 = plot(
+                    x_values, weights_D_ie_track, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="D Value", 
+                    title="D factor (IE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie ", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                p11 = plot(
+                    x_values, weights_F_ie_track, 
+                    label="Product over time", 
+                    xlabel="Time (ms)", 
+                    ylabel="F Value", 
+                    title="F factor (IE) d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie", 
+                    titlefontsize=title_fontsize,
+                    size=(fig_width, fig_height),
+                    left_margin=plot_margin # Apply the margin adjustment here in pixels
+                )
+
+                combined_plot_2 = plot(p9, p10, p11, layout = (3, 1), size = (fig_width*1.2, fig_height*3.2))
+
+                savefig(combined_plot_2,"$dir_name/plot_DF_IE_$timestamp_str.png") 
+                
 
                 println("Figure saved as $fig_filename")  
-                json_filename = "$dir_name/$timestamp_str.json"
 
+
+                json_filename = "$dir_name/$timestamp_str.json"
 
 
 
@@ -307,8 +347,6 @@ function run_experiment(;
                     "jii_para" => params.jii_para,
                     "Nstim" => params.Nstim,
                     "stimstr_para" => params.stimstr_para,
-                    "d" => params.d,
-                    "f" => params.f,
                     "stim_duration" => params.stim_duration,
                     "stim_start_time" => params.stim_start_time,
                     "ie_sign"=> params.ie_sign,
@@ -316,7 +354,11 @@ function run_experiment(;
                     "corr_flag" =>  params.corr_flag,
                     "lambda_noise" => params.lambda_noise,
                     "add_noise" => params.add_noise,
-                    "scale_noise" => params.scale_noise
+                    "scale_noise" => params.scale_noise,
+                    "d_ee" => params.d_ee,
+                    "f_ee" => params.f_ee,
+                    "d_ie" => params.d_ie,
+                    "f_ie" => params.f_ie
                 )
 
                 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -356,14 +398,13 @@ function run_experiment(;
             for iter in 1:n_run
                 println("Current iteration: $iter")  # This line prints the current iteration number
                 local EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history
-                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_mean, weights_F_mean,weights_IE_mean_history,weights_EE_mean_history=sim_dynamic(
+                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track
+                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
                     params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
-                    params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,params.d,
-                    params.f,params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-                    params.add_noise,
-                    params.lambda_noise,
-                    params.scale_noise)
+                    params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
+                    params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
+                    params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie)
+
                 EPSP_EPSP_pool = v_history[1:100, end-9999:end]
                 TT_pool = v_history[501:600, end-9999:end]
                 IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
@@ -440,11 +481,10 @@ jei = parse(Float64, get_arg("--jei", string(-18.0 * 1.2)))
 jii = parse(Float64, get_arg("--jii", "-16.0"))
 jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "4000"))
-stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
-d = parse(Float64, get_arg("--d", "0.15"))
-f = parse(Float64, get_arg("--f", "0.92"))
-stim_duration= parse(Int, get_arg("--stim_duration", "8"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "400"))
+
+stimstr = parse(Float64, get_arg("--stimstr", "0.7"))
+stim_duration= parse(Int, get_arg("--stim_duration", "5"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
@@ -454,6 +494,11 @@ lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
 add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "0.4"))
 env = parse(Int, get_arg("--env", "3"))
+
+d_ee = parse(Float64, get_arg("--d_ee", "0.15"))
+f_ee = parse(Float64, get_arg("--f_ee", "0.92"))
+d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
+f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
 run_experiment(;Ncells,
     Ne,
@@ -472,8 +517,6 @@ run_experiment(;Ncells,
     jee,
     Nstim,
     stimstr,
-    d,
-    f,
     stim_duration,
     stim_start_time,
     ie_sign,
@@ -483,5 +526,9 @@ run_experiment(;Ncells,
     add_noise,
     lambda_noise,
     scale_noise,
-    env
+    env,
+    d_ee,
+    f_ee,
+    d_ie,
+    f_ie
 )

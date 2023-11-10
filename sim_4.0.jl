@@ -5,7 +5,9 @@ using Statistics
 using ProgressMeter
 
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
-    jei_para,jii_para,jee_para, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,add_noise,lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie)
+    jei_para,jii_para,jee_para, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,
+    add_noise,lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,
+    stim_duration_2,stim_start_2,stimstr_2)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -29,18 +31,29 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
    
 
     # Stimulation
-    stimstr = stimstr_para/taue 
+    stimstr = stimstr_para/taue
+    stimstr_2 = stimstr_2/taue
     print("stim is ")
     println(stimstr)
+    print("stim 2 is ")
+    println(stimstr_2)
 
     stimstart = stim_start_time
     stimend = stim_start_time+stim_duration
+
+    stim_end_2 = stim_duration_2 + stim_start_2
     
     print("stim starting time is ")
     println(stim_start_time)
 
     print("stim ending time is ")
     println(stimend)
+
+    print("stim 2 starting time is ")
+    println(stim_start_2)
+
+    print("stim 2 ending time is ")
+    println(stim_end_2)
 
 
     #d = 0.15       # depression fraction upon a spike
@@ -220,6 +233,11 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
                 synInput += stimstr
             end
             
+
+            if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)
+                synInput += stimstr_2
+            end
+
             if add_noise
                 
                synInput += poisson_noise

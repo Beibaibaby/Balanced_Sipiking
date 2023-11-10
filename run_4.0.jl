@@ -49,6 +49,9 @@ struct NetworkParameters
     f_ee::Float64
     d_ie::Float64
     f_ie::Float64
+    stim_duration_2::Int
+    stim_start_2::Int
+    stimstr_2::Float64
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -92,7 +95,10 @@ function run_experiment(;
     d_ee,
     f_ee,
     d_ie,
-    f_ie
+    f_ie,
+    stim_duration_2,
+    stim_start_2,
+    stimstr_2
 )
         
         doplot = true
@@ -104,7 +110,7 @@ function run_experiment(;
         # Now, use the provided values to create an instance of the struct:
         
         params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
-        lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie)
+        lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,stim_duration_2,stim_start_2,stimstr_2)
 
         #store it
         #run the stimulus
@@ -114,7 +120,8 @@ function run_experiment(;
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
             params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-            params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie)
+            params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
+            params.stim_duration_2,params.stim_start_2,params.stimstr_2)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
         
@@ -358,7 +365,10 @@ function run_experiment(;
                     "d_ee" => params.d_ee,
                     "f_ee" => params.f_ee,
                     "d_ie" => params.d_ie,
-                    "f_ie" => params.f_ie
+                    "f_ie" => params.f_ie,
+                    "stim_duration_2"=>params.stim_duration_2,
+                    "stim_start_2"=>params.stim_start_2,
+                    "stimstr_2"=>params.stimstr_2
                 )
 
                 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -468,7 +478,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "1000"))
+T = parse(Int, get_arg("--T", "1500"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -482,7 +492,7 @@ jii = parse(Float64, get_arg("--jii", "-16.0"))
 jee = parse(Float64, get_arg("--jee", "10.0"))
 Nstim = parse(Int, get_arg("--Nstim", "4000"))
 
-stimstr = parse(Float64, get_arg("--stimstr", "0.7"))
+stimstr = parse(Float64, get_arg("--stimstr", "1.7"))
 stim_duration= parse(Int, get_arg("--stim_duration", "5"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
@@ -499,6 +509,12 @@ d_ee = parse(Float64, get_arg("--d_ee", "0.15"))
 f_ee = parse(Float64, get_arg("--f_ee", "0.92"))
 d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
+
+stimstr_2 = parse(Float64, get_arg("--stimstr_2", "-2.0"))
+stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "5"))
+stim_start_2 = parse(Int, get_arg("--stim_start_2", "600"))
+
+
 
 run_experiment(;Ncells,
     Ne,
@@ -530,5 +546,8 @@ run_experiment(;Ncells,
     d_ee,
     f_ee,
     d_ie,
-    f_ie
+    f_ie,
+    stim_duration_2,
+    stim_start_2,
+    stimstr_2
 )

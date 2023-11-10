@@ -9,18 +9,18 @@
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/trash/jobname.%A_%a.out
 #SBATCH --error=/gpfs/data/doiron-lab/draco/trash/jobname.%A_%a.err
-#SBATCH --array=1-5%5
+#SBATCH --array=1-6%6
 
 # Define an array of stimstr_2 values
-stimstr_2_values=(-1.7 -5.0 -10 -25 -50)
+stimstr_2_values=(-1.7 -5.0 -10 -25 -50 0)
 
 # Get the stimstr_2 value for the current task
 stimstr_2_index=$(($SLURM_ARRAY_TASK_ID - 1))
 stimstr_2=${stimstr_2_values[$stimstr_2_index]}
 
 # Fixed parameters
-d_ee=0.95
-f_ee=0.01
+d_ee=0.995
+f_ee=0.0001
 d_ie=0.25
 f_ie=0.0
 

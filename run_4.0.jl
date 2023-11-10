@@ -481,7 +481,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "1000"))
+T = parse(Int, get_arg("--T", "2500"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -510,13 +510,13 @@ f_ee = parse(Float64, get_arg("--f_ee", "0.92"))
 d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
-stimstr = parse(Float64, get_arg("--stimstr", "-10"))
-stim_duration= parse(Int, get_arg("--stim_duration", "50"))
+stimstr = parse(Float64, get_arg("--stimstr", "10.0"))
+stim_duration= parse(Int, get_arg("--stim_duration", "10"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
-stimstr_2 = parse(Float64, get_arg("--stimstr_2", "-50"))
-stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "50"))
-stim_start_2 = parse(Int, get_arg("--stim_start_2", "600"))
+stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0"))
+stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "400"))
+stim_start_2 = parse(Int, get_arg("--stim_start_2", "1000"))
 
 
 

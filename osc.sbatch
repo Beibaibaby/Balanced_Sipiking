@@ -23,15 +23,15 @@ array_index=$(($SLURM_ARRAY_TASK_ID - 1))
 jie_index=$(($array_index / ${#stimstr_values[@]}))
 stimstr_index=$(($array_index % ${#stimstr_values[@]}))
 
-# Get the jie and stimstr values for the current task
+
 jie=${jie_values[$jie_index]}
 stimstr=${stimstr_values[$stimstr_index]}
 
-# Fixed parameters
+
 d_ee=0.2
 f_ee=0.85
 d_ie=0.2
 f_ie=0.0
 
-# Run the Julia script with the current parameters
+
 julia run_4.0.jl --d_ee $d_ee --f_ee $f_ee --d_ie $d_ie --f_ie $f_ie --stimstr $stimstr --jie $jie

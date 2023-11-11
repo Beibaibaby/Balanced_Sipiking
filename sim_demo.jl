@@ -95,8 +95,8 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     thresh = zeros(Ncells)
     tau = zeros(Ncells)
 
-    mu[1:Ne] .= (muemax - muemin) .* rand(Ne) .+ muemin
-    mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
+    #mu[1:Ne] .= (muemax - muemin) .* rand(Ne) .+ muemin
+    #mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
 
     thresh[1:Ne] .= threshe
     thresh[(Ne + 1):Ncells] .= threshi
@@ -153,10 +153,10 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     v = rand(Ncells)
     #v[1:3] .=0
-    v = 0 * v
-    #v = vre*ones(Ncells)
+    #v = zeros(Ncells)
+    v = vre*ones(Ncells)
     lastSpike = -100 * ones(Ncells)
-    
+    #astSpike = -10000 * ones(Ncells)
     
     println("Starting simulation")
     pl = Progress(Nsteps, 5)

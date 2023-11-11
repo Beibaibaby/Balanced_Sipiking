@@ -17,7 +17,7 @@ using Distributions
 #@everywhere using SharedArrays
 #@everywhere include("sim_inject_3.0.0.jl") 
 using SharedArrays
-include("sim_4.0.jl") 
+include("sim_5.jl") 
 
 struct NetworkParameters
     Ncells::Int

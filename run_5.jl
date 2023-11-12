@@ -43,7 +43,7 @@ struct NetworkParameters
     ee_sign::Bool
     corr_flag::Bool
     add_noise::Bool
-    lambda_noise::Float64
+    sigma_noise::Float64
     scale_noise::Float64
     d_ee::Float64
     f_ee::Float64
@@ -52,6 +52,7 @@ struct NetworkParameters
     stim_duration_2::Int
     stim_start_2::Int
     stimstr_2::Float64
+    c_noise::Float64
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -89,7 +90,7 @@ function run_experiment(;
     corr_flag,
     low_plot,
     add_noise,
-    lambda_noise,
+    sigma_noise,
     scale_noise,
     env,
     d_ee,
@@ -98,7 +99,8 @@ function run_experiment(;
     f_ie,
     stim_duration_2,
     stim_start_2,
-    stimstr_2
+    stimstr_2,
+    c_noise
 )
         
         doplot = true
@@ -110,7 +112,7 @@ function run_experiment(;
         # Now, use the provided values to create an instance of the struct:
         
         params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
-        lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,stim_duration_2,stim_start_2,stimstr_2)
+        sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,stim_duration_2,stim_start_2,stimstr_2,c_noise)
 
         #store it
         #run the stimulus
@@ -120,8 +122,8 @@ function run_experiment(;
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
             params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-            params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
-            params.stim_duration_2,params.stim_start_2,params.stimstr_2)
+            params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
+            params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
         
@@ -164,10 +166,10 @@ function run_experiment(;
                 # Add a code to detect low rate or not 
                 if add_noise
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)", ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise stim=$stimstr", ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise lambda=$lambda_noise stim=$stimstr)")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise stim=$stimstr")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 else
@@ -362,7 +364,7 @@ function run_experiment(;
                     "ie_sign"=> params.ie_sign,
                     "ee_sign"=> params.ee_sign,
                     "corr_flag" =>  params.corr_flag,
-                    "lambda_noise" => params.lambda_noise,
+                    "sigma_noise" => params.sigma_noise,
                     "add_noise" => params.add_noise,
                     "scale_noise" => params.scale_noise,
                     "d_ee" => params.d_ee,
@@ -371,7 +373,8 @@ function run_experiment(;
                     "f_ie" => params.f_ie,
                     "stim_duration_2"=>params.stim_duration_2,
                     "stim_start_2"=>params.stim_start_2,
-                    "stimstr_2"=>params.stimstr_2
+                    "stimstr_2"=>params.stimstr_2,
+                    "c_noise"=>params.c_noise
                 )
 
                 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -416,7 +419,7 @@ function run_experiment(;
                     params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
                     params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
                     params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-                    params.add_noise, params.lambda_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie)
+                    params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,params.c_noise)
 
                 EPSP_EPSP_pool = v_history[1:100, end-9999:end]
                 TT_pool = v_history[501:600, end-9999:end]
@@ -500,9 +503,12 @@ ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
-lambda_noise = parse(Float64, get_arg("--lambda_noise", "0.5"))
-add_noise = parse(Bool, get_arg("--add_noise", "false"))
-scale_noise = parse(Float64, get_arg("--scale_noise", "0.4"))
+
+sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))
+add_noise = parse(Bool, get_arg("--add_noise", "true"))
+scale_noise = parse(Float64, get_arg("--scale_noise", "4.0"))
+c_noise = parse(Float64, get_arg("--c_noise", "0.0"))
+
 env = parse(Int, get_arg("--env", "3"))
 
 d_ee = parse(Float64, get_arg("--d_ee", "0.15"))
@@ -518,6 +524,7 @@ stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
+
 
 
 
@@ -545,7 +552,7 @@ run_experiment(;Ncells,
     corr_flag,
     low_plot,
     add_noise,
-    lambda_noise,
+    sigma_noise,
     scale_noise,
     env,
     d_ee,
@@ -554,5 +561,6 @@ run_experiment(;Ncells,
     f_ie,
     stim_duration_2,
     stim_start_2,
-    stimstr_2
+    stimstr_2,
+    c_noise
 )

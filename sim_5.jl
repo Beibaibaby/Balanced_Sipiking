@@ -9,8 +9,8 @@ include("./src/LIF_1.0.0_compare.jl")
 
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
     jei_para,jii_para,jee_para, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,
-    add_noise,lambda_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,
-    stim_duration_2,stim_start_2,stimstr_2)
+    add_noise,sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,
+    stim_duration_2,stim_start_2,stimstr_2,c_noise)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -20,7 +20,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     if add_noise
 
        print("noise level is ")
-       println(lambda_noise)
+       println(sigma_noise)
 
        print("noise lamba is ")
        println(scale_noise)
@@ -193,12 +193,9 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         weights_EE_mean_history[ti] = mean(W_sub_view_ee)
         
         if add_noise
-           poisson_noise = scale_noise*rand(Poisson(lambda_noise * dt)) 
-      
-           if poisson_noise>0
-               println("pulse")
-               print(ti)
-           end
+            
+           gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
+           
         end
 
         for ci = 1:Ncells
@@ -240,10 +237,15 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)
                 synInput += stimstr_2
             end
+            
 
             if add_noise
-                
-               synInput += poisson_noise
+
+            
+               gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
+           
+
+               synInput += gaussian_noise_global + gaussian_noise_local
             end
            
             if t > (lastSpike[ci] + refrac)

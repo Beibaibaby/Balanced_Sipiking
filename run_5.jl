@@ -146,7 +146,7 @@ function run_experiment(;
                 println("creating plot")
            
                 # Define plot size: (width, height)
-                plot_size = (1000, 600) 
+                plot_size = (2500, 600) 
                 plot_margin = 50mm
 
                 # Parameters for sliding window

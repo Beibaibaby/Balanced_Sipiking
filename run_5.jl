@@ -506,14 +506,14 @@ low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
-scale_noise = parse(Float64, get_arg("--scale_noise", "4.0"))
+scale_noise = parse(Float64, get_arg("--scale_noise", "5.0"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.0"))
 
 env = parse(Int, get_arg("--env", "3"))
 
-d_ee = parse(Float64, get_arg("--d_ee", "0.15"))
-f_ee = parse(Float64, get_arg("--f_ee", "0.92"))
-d_ie = parse(Float64, get_arg("--d_ie", "0.15"))
+d_ee = parse(Float64, get_arg("--d_ee", "0.24"))
+f_ee = parse(Float64, get_arg("--f_ee", "0.85"))
+d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))

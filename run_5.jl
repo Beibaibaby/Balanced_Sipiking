@@ -389,6 +389,28 @@ function run_experiment(;
                 #println(cross_EPSP_EPSP)
                 #println("cross E-E: ", cross_corr_E_E)
 
+                C_input = E_input .+ I_input
+                avg_correlation_E_I=compute_correlation(E_input, I_iput)
+                avg_correlation_E_E=compute_correlation(E_input, E_input)
+                avg_correlation_I_I=compute_correlation(I_input, I_input)
+                avg_correlation_C_C=compute_correlation(C_input, C_input)
+                println("avg correlation(E-I): ", avg_correlation_E_I)
+                println("avg correlation(E-E): ", avg_correlation_E_E)
+                println("avg correlation(I-I): ", avg_correlation_I_I)
+                println("avg correlation(C-C): ", avg_correlation_C_C)
+
+                cross_corr_E_E=compute_cross_correlation(E_input[:, end-9999:end], E_input[:, end-9999:end])
+                cross_corr_I_I=compute_cross_correlation(I_input[:, end-9999:end], I_input[:, end-9999:end])
+                cross_corr_E_I=compute_cross_correlation(E_input[:, end-9999:end], I_input[:, end-9999:end])
+                cross_corr_I_E=compute_cross_correlation(I_input[:, end-9999:end], E_input[:, end-9999:end])
+                cross_corr_C_C=compute_cross_correlation(C_input[:, end-9999:end], C_input[:, end-9999:end])
+
+                plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, "dir_name/")
+
+    
+    
+
+
         end
 
 
@@ -414,12 +436,14 @@ function run_experiment(;
             for iter in 1:n_run
                 println("Current iteration: $iter")  # This line prints the current iteration number
                 local EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track
-                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
+                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track, weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track
+                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,
+                weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
                     params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
                     params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
                     params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-                    params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,params.c_noise)
+                    params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
+                    params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise)
 
                 EPSP_EPSP_pool = v_history[1:100, end-9999:end]
                 TT_pool = v_history[501:600, end-9999:end]
@@ -501,11 +525,11 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
-corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
+corr_flag = parse(Bool, get_arg("--corr_flag", "true")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))
-add_noise = parse(Bool, get_arg("--add_noise", "true"))
+add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "5.0"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.0"))
 

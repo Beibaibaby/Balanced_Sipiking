@@ -214,7 +214,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             
             if corr_flag == true
               if ci<corr_pairs
-                synInput=synInput_E-(mu[ci]+0.2)/tau[ci]
+                synInput=synInput_E+(-0.2+mu[ci])/tau[ci]
                 #synInput = synInput_E
               end
 
@@ -525,7 +525,7 @@ end
 
 
 
-function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
+function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, save_fig)
     # Assuming the dictionaries have the same keys
     sorted_keys = sort(collect(keys(cross_corr_E_E)))
     
@@ -533,18 +533,20 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_
     sorted_values_I_I = [cross_corr_I_I[k] for k in sorted_keys]
     sorted_values_E_I = [cross_corr_E_I[k] for k in sorted_keys]
     sorted_values_I_E = [cross_corr_I_E[k] for k in sorted_keys]
+    sorted_values_C_C = [cross_corr_C_C[k] for k in sorted_keys]
 
     plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright)
     plot!(sorted_keys, sorted_values_I_I, label="I-I", linewidth=2, marker=:circle, color=:red)
     plot!(sorted_keys, sorted_values_E_I, label="E-I", linewidth=2, marker=:circle, color=:yellow)
     plot!(sorted_keys, sorted_values_I_E, label="I-E", linewidth=2, marker=:circle, color=:orange)
-    
+    plot!(sorted_keys, sorted_values_C_C, label="C-C", linewidth=2, marker=:circle, color=:green)
+
     xlabel!("Tau")
     ylabel!("Correlation")
     title!("Cross-correlation")
-    savefig("cross_correlation_plot_PSP_new.png")
- 
+    savefig(joinpath(save_dir, "plot_corr_PSP.png"))
 end
+
 
 function plot_correlations_mem(cross_corr_E_E, cross_corr_I_I, cross_corr_T_T, cross_corr_E_I, cross_corr_I_E, output_file)
     # Assuming the dictionaries have the same keys

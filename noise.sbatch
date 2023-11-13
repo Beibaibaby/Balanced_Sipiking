@@ -7,8 +7,8 @@
 #SBATCH --time=08:30:30
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=100gb
-#SBATCH --output=/gpfs/data/doiron-lab/draco/trash/noise_job.%A_%a.out
-#SBATCH --error=/gpfs/data/doiron-lab/draco/trash/noise.%A_%a.err
+#SBATCH --output=/gpfs/data/doiron-lab/draco/trash/noisenof_job.%A_%a.out
+#SBATCH --error=/gpfs/data/doiron-lab/draco/trash/noisenof.%A_%a.err
 #SBATCH --array=1-112%30 # Total tasks = 14 c_noise * 8 scale_noise
 
 # Define arrays of values
@@ -28,5 +28,5 @@ c_noise=${c_noise_values[$c_noise_index]}
 scale_noise=${scale_noise_values[$scale_noise_index]}
 
 # Run the Julia script with the current values
-julia run_5.jl --T 4000 --c_noise $c_noise --scale_noise $scale_noise
+julia run_5.jl --T 4000 --f_ee 0.0 --c_noise $c_noise --scale_noise $scale_noise
 

@@ -390,7 +390,7 @@ function run_experiment(;
                 #println("cross E-E: ", cross_corr_E_E)
 
                 C_input = E_input .+ I_input
-                avg_correlation_E_I=compute_correlation(E_input, I_iput)
+                avg_correlation_E_I=compute_correlation(E_input, I_input)
                 avg_correlation_E_E=compute_correlation(E_input, E_input)
                 avg_correlation_I_I=compute_correlation(I_input, I_input)
                 avg_correlation_C_C=compute_correlation(C_input, C_input)
@@ -399,13 +399,13 @@ function run_experiment(;
                 println("avg correlation(I-I): ", avg_correlation_I_I)
                 println("avg correlation(C-C): ", avg_correlation_C_C)
 
-                cross_corr_E_E=compute_cross_correlation(E_input[:, end-9999:end], E_input[:, end-9999:end])
-                cross_corr_I_I=compute_cross_correlation(I_input[:, end-9999:end], I_input[:, end-9999:end])
-                cross_corr_E_I=compute_cross_correlation(E_input[:, end-9999:end], I_input[:, end-9999:end])
-                cross_corr_I_E=compute_cross_correlation(I_input[:, end-9999:end], E_input[:, end-9999:end])
-                cross_corr_C_C=compute_cross_correlation(C_input[:, end-9999:end], C_input[:, end-9999:end])
+                cross_corr_E_E=compute_cross_correlation(E_input, E_input)
+                cross_corr_I_I=compute_cross_correlation(I_input, I_input)
+                cross_corr_E_I=compute_cross_correlation(E_input, I_input)
+                cross_corr_I_E=compute_cross_correlation(I_input, E_input)
+                cross_corr_C_C=compute_cross_correlation(C_input, C_input)
 
-                plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, "dir_name/")
+                plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, "$dir_name")
 
     
     
@@ -529,7 +529,7 @@ corr_flag = parse(Bool, get_arg("--corr_flag", "true")) ##wether compute and plo
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))
-add_noise = parse(Bool, get_arg("--add_noise", "false"))
+add_noise = parse(Bool, get_arg("--add_noise", "true"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "5.0"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.0"))
 

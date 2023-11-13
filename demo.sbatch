@@ -11,4 +11,4 @@
 #SBATCH --error=/gpfs/data/doiron-lab/draco/trash/demo_job.%j.err
 
 # Run the Julia script
-julia run_5.jl --T 1500 --c_noise 0.0 --ie_sign false --ee_sign false
+julia run_5.jl --T 5000 --c_noise 0.0 --ie_sign false --ee_sign false

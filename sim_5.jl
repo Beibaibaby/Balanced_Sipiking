@@ -339,19 +339,22 @@ function compute_correlation(E_input::Matrix, I_input::Matrix, num_pairs::Int=10
     return avg_correlation
 end
 
-function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-5:5, num_pairs::Int=50)
+function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-15:15, num_pairs::Int=50)
     # Ensure input matrices have the same dimensions
     if size(E_input) != size(I_input)
         error("E_input and I_input must have the same dimensions.")
     end
 
     Ncells, Nsteps = size(E_input)
+    
+    num_pairs=round(Int,Ncells/1.5)
+
 
     # Ensure the number of pairs is less than or equal to Ncells
     if num_pairs > Ncells * Ncells
         error("The number of pairs cannot exceed the square of the number of cells.")
     end
-
+    
 
     # Randomly select indices for both E_input and I_input
     random_e_indices = rand(1:Ncells, num_pairs)
@@ -367,11 +370,11 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
             
             # Shift data according to tau
             if tau > 0
-                e_data = e_data[1:end-tau*10]
-                i_data = i_data[tau*10+1:end]
+                e_data = e_data[1:end-tau]
+                i_data = i_data[tau+1:end]
             elseif tau < 0
-                e_data = e_data[-tau*10+1:end]
-                i_data = i_data[1:end+tau*10]
+                e_data = e_data[-tau+1:end]
+                i_data = i_data[1:end+tau]
             end
             
             # Compute Pearson correlation for this tau and add to the total
@@ -525,7 +528,7 @@ end
 
 
 
-function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, save_fig)
+function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, save_dir)
     # Assuming the dictionaries have the same keys
     sorted_keys = sort(collect(keys(cross_corr_E_E)))
     

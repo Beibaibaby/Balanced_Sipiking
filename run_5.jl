@@ -146,7 +146,7 @@ function run_experiment(;
                 println("creating plot")
            
                 # Define plot size: (width, height)
-                plot_size = (2500, 800) 
+                plot_size = (2500, 1100) 
                 plot_margin = 50mm
 
                 # Parameters for sliding window
@@ -395,9 +395,9 @@ function run_experiment(;
                 
                 #### Codes for searching events
                 # Assuming step_size in ms and time_values array is in place
-                buffer_before = 10 / step_size  # 100 ms before in steps
-                buffer_after = 20 / step_size   # 200 ms after in steps
-                event_thre = 2
+                buffer_before = round(Int, 10 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                buffer_after = round(Int, 20 / step_size)   # 200 ms after in steps, rounded to nearest integer
+                event_thre = 0.2
                 # Calculate overall average for excitatory rates
                 overall_avg_e_rate = mean(e_rate)
 
@@ -436,9 +436,7 @@ function run_experiment(;
 
                 # Plot grey rectangles for event periods
                 for (start_time, end_time) in excursions_e
-                    rect_x = start_time
-                    rect_width = end_time - start_time
-                    rect(p_event, [rect_x], [0], [rect_width], [maximum(e_rate)], color=:grey, alpha=0.3)
+                    vspan!(p_event, [start_time, end_time], color=:grey, alpha=0.3,label=false)
                 end
 
                 # Add the excitatory and inhibitory rates to the plot
@@ -588,7 +586,7 @@ function run_experiment(;
                 plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
                 
                 plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
-                plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "nplot_corr_nonevents.png"))
+                plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
                
 
         end
@@ -705,7 +703,7 @@ Nstim = parse(Int, get_arg("--Nstim", "4000"))
 
 ie_sign = parse(Bool, get_arg("--ie_sign", "true")) #controal E->I is dynamic or not 
 ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or not 
-corr_flag = parse(Bool, get_arg("--corr_flag", "true")) ##wether compute and plot EPSP and IPSP
+corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))

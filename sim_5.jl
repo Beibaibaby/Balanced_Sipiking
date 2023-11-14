@@ -537,8 +537,10 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross
     sorted_values_E_I = [cross_corr_E_I[k] for k in sorted_keys]
     sorted_values_I_E = [cross_corr_I_E[k] for k in sorted_keys]
     sorted_values_C_C = [cross_corr_C_C[k] for k in sorted_keys]
+    plot_margin = 25mm
+    p_size = (1200, 800)
 
-    plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright)
+    plot(sorted_keys, sorted_values_E_E, label="E-E", linewidth=2, marker=:circle, color=:blue, legend=:topright,size=p_size,left_margin=plot_margin)
     plot!(sorted_keys, sorted_values_I_I, label="I-I", linewidth=2, marker=:circle, color=:red)
     plot!(sorted_keys, sorted_values_E_I, label="E-I", linewidth=2, marker=:circle, color=:yellow)
     plot!(sorted_keys, sorted_values_I_E, label="I-E", linewidth=2, marker=:circle, color=:orange)

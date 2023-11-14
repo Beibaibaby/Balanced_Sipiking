@@ -28,5 +28,5 @@ c_noise=${c_noise_values[$c_noise_index]}
 scale_noise=${scale_noise_values[$scale_noise_index]}
 
 # Run the Julia script with the current values
-julia run_5.jl --T 20000 --f_ee 0.0 --c_noise $c_noise --scale_noise $scale_noise
+julia run_5.jl --T 20000 --c_noise $c_noise --scale_noise $scale_noise
 

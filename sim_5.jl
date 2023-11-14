@@ -528,7 +528,7 @@ end
 
 
 
-function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, save_dir)
+function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, output_path)
     # Assuming the dictionaries have the same keys
     sorted_keys = sort(collect(keys(cross_corr_E_E)))
     
@@ -547,7 +547,7 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross
     xlabel!("Tau")
     ylabel!("Correlation")
     title!("Cross-correlation")
-    savefig(joinpath(save_dir, "plot_corr_PSP.png"))
+    savefig(output_path)
 end
 
 

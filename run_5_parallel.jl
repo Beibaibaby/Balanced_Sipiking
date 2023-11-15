@@ -397,9 +397,9 @@ function run_experiment(;
                 
                 #### Codes for searching events
                 # Assuming step_size in ms and time_values array is in place
-                buffer_before = round(Int, 10 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                buffer_after = round(Int, 20 / step_size)   # 200 ms after in steps, rounded to nearest integer
-                event_thre = 0.2
+                buffer_before = round(Int, 100 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                buffer_after = round(Int,  200/ step_size)   # 200 ms after in steps, rounded to nearest integer
+                event_thre = 3
                 # Calculate overall average for excitatory rates
                 overall_avg_e_rate = mean(e_rate)
 

@@ -1,0 +1,14 @@
+ERROR: LoadError: IOError: readdir("/gpfs/data/doiron-lab/draco/results_corr/exp_20231115_005726"): no such file or directory (ENOENT)
+Stacktrace:
+ [1] uv_error
+   @ ./libuv.jl:100 [inlined]
+ [2] readdir(dir::String; join::Bool, sort::Bool)
+   @ Base.Filesystem ./file.jl:863
+ [3] readdir
+   @ ./file.jl:856 [inlined]
+ [4] average_correlations(main_dir::String, file_name::String)
+   @ Main ~/Balanced_Sipiking/plot_parallel.jl:12
+ [5] top-level scope
+   @ ~/Balanced_Sipiking/plot_parallel.jl:54
+in expression starting at /home/dracoxu/Balanced_Sipiking/plot_parallel.jl:54
+Depression ratio H_5/H_1: 0.9942046295244488

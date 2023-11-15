@@ -193,7 +193,7 @@ function run_experiment(;
 
                 plot_curve(d_ee, f_ee, d_ie, f_ie, "$dir_name/plot_curve_$timestamp_str.png")
                 
-                @save "$dir_name/times.jld2" times
+                #@save "$dir_name/times.jld2" times
                 #@save "$dir_name/ns.jld2" ns
                 #@save "$dir_name/Ne.jld2" Ne
                 #@save "$dir_name/Ncells.jld2" Ncells

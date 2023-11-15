@@ -347,7 +347,7 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
 
     Ncells, Nsteps = size(E_input)
     
-    num_pairs=round(Int,Ncells)
+    num_pairs=round(Int,Ncells/1.1)
 
 
     # Ensure the number of pairs is less than or equal to Ncells
@@ -363,138 +363,37 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
     avg_correlations = Dict{Int, Float64}()
 
     for tau in tau_range
-        total_correlation = 0.0
-        for i = 1:num_pairs
-            e_data = E_input[random_e_indices[i], :]
-            i_data = I_input[random_i_indices[i], :]
-            
-            # Shift data according to tau
-            if tau > 0
-                e_data = e_data[1:end-tau]
-                i_data = i_data[tau+1:end]
-            elseif tau < 0
-                e_data = e_data[-tau+1:end]
-                i_data = i_data[1:end+tau]
+        if abs(tau) >= Nsteps
+            avg_correlations[tau] = 0
+        else
+            total_correlation = 0.0
+            for i = 1:num_pairs
+                
+                e_data = E_input[random_e_indices[i], :]
+                i_data = I_input[random_i_indices[i], :]
+                
+                # Shift data according to tau
+                if tau > 0
+                    e_data = e_data[1:end-tau]
+                    i_data = i_data[tau+1:end]
+                elseif tau < 0
+                    e_data = e_data[-tau+1:end]
+                    i_data = i_data[1:end+tau]
+                end
+                
+                # Compute Pearson correlation for this tau and add to the total
+                total_correlation += cor(e_data, i_data)
             end
-            
-            # Compute Pearson correlation for this tau and add to the total
-            total_correlation += cor(e_data, i_data)
-        end
 
-        # Compute average correlation for this tau
-        avg_correlations[tau] = total_correlation / num_pairs
+            # Compute average correlation for this tau
+            avg_correlations[tau] = total_correlation / num_pairs
+        end
     end
 
     return avg_correlations
 end
 
     
-
-function run_simulation_and_tune_params(K, Ne, Ni, T, jie, jee, jei, jii)
- params = NetworkParameters(K, Ne, Ni, T, sqrt(K), 10, 15, jie, jee, jei, jii)
-
- times, ns, Ne, Ncells, T = sim(params.K, params.Ne, params.Ni, params.T, params.jie, params.jei, params.jii, params.jee)
-
- excitatory_rate = mean(1000 * ns[1:params.Ne] / params.T)
- inhibitory_rate = mean(1000 * ns[(params.Ne + 1):Ncells] / params.T)
-
- return times, excitatory_rate, inhibitory_rate
-end
-
-function tune_parameters()
- doplot = true
-
- successful_adjustments = 0
- required_successful_adjustments = 50
- # Initial parameter values
- K = 800
- Ne = 4000
- Ni = 1000
- T = 1500
- sqrtK = sqrt(K)
- taue = 10
- taui = 15
-
- jie = 0.2 / (taui * sqrtK)
- jee = 0.4 / (taue * sqrtK)
- jei = -0.8 * 1.2 / (taue * sqrtK)
- jii = -0.8 / (taui * sqrtK)
-
- adjustment_step = 0.001  # Adjust step size based on sensitivity
- random_factor = 0.001   # Introduce randomness
- while successful_adjustments < required_successful_adjustments
- while true
-    println("Round+1")
-    times, excitatory_rate, inhibitory_rate = run_simulation_and_tune_params(K, Ne, Ni, T, jie, jee, jei, jii)
-
-    if excitatory_rate <= 5 && inhibitory_rate <= 5 && inhibitory_rate < excitatory_rate && inhibitory_rate >=0.5
-        println("Parameters tuned successfully:")
-        println("jie = $jie, jee = $jee, jei = $jei, jii = $jii")
-        println("Mean excitatory firing rate: $excitatory_rate Hz")
-        println("Mean inhibitory firing rate: $inhibitory_rate Hz")
-        successful_adjustments=successful_adjustments+1
-        if doplot
-            timestamp = Dates.now()
-            timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
-
-            plot_size = (600, 400)
-
-            window_size = 100
-            step_size = 5
-
-            e_rate = compute_sliding_rate(times[1:Ne, :], window_size, step_size, T)
-            i_rate = compute_sliding_rate(times[(Ne + 1):Ncells, :], window_size, step_size, T)
-
-            n_steps = length(e_rate)
-            time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
-
-            p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)",
-                      label="Excitatory", lw=2, linecolor=:red, size=plot_size)
-            plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:skyblue)
-
-            fig_filename = "./figs/ss_$timestamp_str.png"
-            savefig(p2, fig_filename)
-            println("Figure saved as $fig_filename")
-
-            json_filename = "./figs/ss_$timestamp_str.json"
-            param_dict = Dict(
-                "K" => K,
-                "Ne" => Ne,
-                "Ni" => Ni,
-                "T" => T,
-                "sqrtK" => sqrtK,
-                "taue" => taue,
-                "taui" => taui,
-                "jie" => jie,
-                "jee" => jee,
-                "jei" => jei,
-                "jii" => jii
-            )
-            JSON3.open(json_filename, "w") do io
-                JSON3.print(io, param_dict)
-            end
-            println("Parameters saved as $json_filename")
-        end
-    
-
-    else
-        # Randomly adjust parameters with noise
-        jie += adjustment_step * (-1 + 2*random_factor * randn())
-        jee += adjustment_step * (-1 + 2*random_factor * randn())
-        jei -= adjustment_step * (-1 + 2*random_factor * randn())
-        jii -= adjustment_step * (-1 + 2*random_factor * randn())
-
-        jie = max(0.0001, jie)
-        jee = max(0.0001, jee)
-
-        # Ensure jei and jii are less than 0
-        jei = min(-0.0001, jei)
-        jii = min(-0.0001, jii)
-    end
- end
- end
-end
-
 #tune_parameters()
 
 

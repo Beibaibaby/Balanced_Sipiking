@@ -4,15 +4,17 @@
 #SBATCH --partition=tier1q
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=15:30:30
+#SBATCH --time=22:30:30
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=100gb
-#SBATCH --output=/gpfs/data/doiron-lab/draco/trash/a.%A_%a.out
-#SBATCH --error=/gpfs/data/doiron-lab/draco/trash/a.%A_%a.err
-#SBATCH --array=1-5%5
+#SBATCH --output=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.out
+#SBATCH --error=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.err
+#SBATCH --array=1-50%50
 
 # Use SLURM_ARRAY_JOB_ID as the identifier
 ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
+
+export QT_QPA_PLATFORM='offscreen'
 
 # Generate a directory name using the array job ID and task ID
 dir_name_in="/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}/${SLURM_ARRAY_TASK_ID}"
@@ -21,10 +23,9 @@ dir_name_in="/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}/${SLUR
 mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
-julia run_6.jl --T 150 --dir_name_in "$dir_name_in"
+julia run_6.jl --T 10000 --dir_name_in "$dir_name_in"
 
 # Create a file indicating the completion of this particular task
-touch "/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}/task_${SLURM_ARRAY_TASK_ID}_completed"
 
 main_dir="/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}"
 

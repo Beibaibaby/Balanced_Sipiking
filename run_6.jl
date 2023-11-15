@@ -102,7 +102,8 @@ function run_experiment(;
     stimstr_2,
     c_noise,
     dir_name_in,
-    corr_sign
+    corr_sign,
+    event_thre
 )
         
         doplot = true
@@ -398,9 +399,9 @@ function run_experiment(;
                 
                         #### Codes for searching events
                         # Assuming step_size in ms and time_values array is in place
-                        buffer_before = round(Int, 10 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                        buffer_after = round(Int,  10/ step_size)   # 200 ms after in steps, rounded to nearest integer
-                        event_thre = 0.5
+                        buffer_before = round(Int, 100 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                        buffer_after = round(Int,  200/ step_size)   # 200 ms after in steps, rounded to nearest integer
+ 
                         # Calculate overall average for excitatory rates
                         overall_avg_e_rate = mean(e_rate)
 
@@ -524,7 +525,7 @@ function run_experiment(;
                         I_input_nonevent = hcat(I_input_nonevent...)
                         
                         C_input = E_input .+ I_input
-
+                        
                         avg_correlation_E_I=compute_correlation(E_input, I_input)
                         avg_correlation_E_E=compute_correlation(E_input, E_input)
                         avg_correlation_I_I=compute_correlation(I_input, I_input)
@@ -540,76 +541,89 @@ function run_experiment(;
                         cross_corr_E_I=compute_cross_correlation(E_input, I_input)
                         cross_corr_I_E=compute_cross_correlation(I_input, E_input)
                         cross_corr_C_C=compute_cross_correlation(C_input, C_input)
-
-                        # Create combined input for events
-                        C_input_event = E_input_event .+ I_input_event
-                        
-                        # Compute average correlations for event-based inputs
-                        avg_correlation_E_I_event = compute_correlation(E_input_event, I_input_event)
-                        avg_correlation_E_E_event = compute_correlation(E_input_event, E_input_event)
-                        avg_correlation_I_I_event = compute_correlation(I_input_event, I_input_event)
-                        avg_correlation_C_C_event = compute_correlation(C_input_event, C_input_event)
-
-                        println("Event-based avg correlation (E-I): ", avg_correlation_E_I_event)
-                        println("Event-based avg correlation (E-E): ", avg_correlation_E_E_event)
-                        println("Event-based avg correlation (I-I): ", avg_correlation_I_I_event)
-                        println("Event-based avg correlation (C-C): ", avg_correlation_C_C_event)
-
-                        # Compute cross-correlations for event-based inputs
-                        cross_corr_E_E_event = compute_cross_correlation(E_input_event, E_input_event)
-                        cross_corr_I_I_event = compute_cross_correlation(I_input_event, I_input_event)
-                        cross_corr_E_I_event = compute_cross_correlation(E_input_event, I_input_event)
-                        cross_corr_I_E_event = compute_cross_correlation(I_input_event, E_input_event)
-                        cross_corr_C_C_event = compute_cross_correlation(C_input_event, C_input_event)
-
-                        # Plot correlations for event-based inputs
-
-                        # Create combined input for nonevents
-                        C_input_nonevent = E_input_nonevent .+ I_input_nonevent
-
-                        # Compute average correlations for nonevent-based inputs
-                        avg_correlation_E_I_nonevent = compute_correlation(E_input_nonevent, I_input_nonevent)
-                        avg_correlation_E_E_nonevent = compute_correlation(E_input_nonevent, E_input_nonevent)
-                        avg_correlation_I_I_nonevent = compute_correlation(I_input_nonevent, I_input_nonevent)
-                        avg_correlation_C_C_nonevent = compute_correlation(C_input_nonevent, C_input_nonevent)
-
-                        println("Nonevent-based avg correlation (E-I): ", avg_correlation_E_I_nonevent)
-                        println("Nonevent-based avg correlation (E-E): ", avg_correlation_E_E_nonevent)
-                        println("Nonevent-based avg correlation (I-I): ", avg_correlation_I_I_nonevent)
-                        println("Nonevent-based avg correlation (C-C): ", avg_correlation_C_C_nonevent)
-
-                        # Compute cross-correlations for nonevent-based inputs
-                        cross_corr_E_E_nonevent = compute_cross_correlation(E_input_nonevent, E_input_nonevent)
-                        cross_corr_I_I_nonevent = compute_cross_correlation(I_input_nonevent, I_input_nonevent)
-                        cross_corr_E_I_nonevent = compute_cross_correlation(E_input_nonevent, I_input_nonevent)
-                        cross_corr_I_E_nonevent = compute_cross_correlation(I_input_nonevent, E_input_nonevent)
-                        cross_corr_C_C_nonevent = compute_cross_correlation(C_input_nonevent, C_input_nonevent)
-            
-                        # Plot correlations for nonevent-based inputs
-                        plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
-                        
-                        plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
-                        plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
-                        
+                       
                         @save joinpath(dir_name_in, "cross_corr_E_E.jld2") cross_corr_E_E
                         @save joinpath(dir_name_in, "cross_corr_I_I.jld2") cross_corr_I_I
                         @save joinpath(dir_name_in, "cross_corr_E_I.jld2") cross_corr_E_I
                         @save joinpath(dir_name_in, "cross_corr_I_E.jld2") cross_corr_I_E
                         @save joinpath(dir_name_in, "cross_corr_C_C.jld2") cross_corr_C_C
 
-                        # Saving event-based cross-correlations
-                        @save joinpath(dir_name_in, "cross_corr_E_E_event.jld2") cross_corr_E_E_event
-                        @save joinpath(dir_name_in, "cross_corr_I_I_event.jld2") cross_corr_I_I_event
-                        @save joinpath(dir_name_in, "cross_corr_E_I_event.jld2") cross_corr_E_I_event
-                        @save joinpath(dir_name_in, "cross_corr_I_E_event.jld2") cross_corr_I_E_event
-                        @save joinpath(dir_name_in, "cross_corr_C_C_event.jld2") cross_corr_C_C_event
+                        plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
+                            
 
-                        # Saving nonevent-based cross-correlations
-                        @save joinpath(dir_name_in, "cross_corr_E_E_nonevent.jld2") cross_corr_E_E_nonevent
-                        @save joinpath(dir_name_in, "cross_corr_I_I_nonevent.jld2") cross_corr_I_I_nonevent
-                        @save joinpath(dir_name_in, "cross_corr_E_I_nonevent.jld2") cross_corr_E_I_nonevent
-                        @save joinpath(dir_name_in, "cross_corr_I_E_nonevent.jld2") cross_corr_I_E_nonevent
-                        @save joinpath(dir_name_in, "cross_corr_C_C_nonevent.jld2") cross_corr_C_C_nonevent
+                        # Create combined input for events
+                        if isempty(E_input_event) || isempty(I_input_event)
+                           println("skip Event")
+                        else
+                            C_input_event = E_input_event .+ I_input_event
+                        
+                            # Compute average correlations for event-based inputs
+                            avg_correlation_E_I_event = compute_correlation(E_input_event, I_input_event)
+                            avg_correlation_E_E_event = compute_correlation(E_input_event, E_input_event)
+                            avg_correlation_I_I_event = compute_correlation(I_input_event, I_input_event)
+                            avg_correlation_C_C_event = compute_correlation(C_input_event, C_input_event)
+
+                            println("Event-based avg correlation (E-I): ", avg_correlation_E_I_event)
+                            println("Event-based avg correlation (E-E): ", avg_correlation_E_E_event)
+                            println("Event-based avg correlation (I-I): ", avg_correlation_I_I_event)
+                            println("Event-based avg correlation (C-C): ", avg_correlation_C_C_event)
+
+                            # Compute cross-correlations for event-based inputs
+                            cross_corr_E_E_event = compute_cross_correlation(E_input_event, E_input_event)
+                            cross_corr_I_I_event = compute_cross_correlation(I_input_event, I_input_event)
+                            cross_corr_E_I_event = compute_cross_correlation(E_input_event, I_input_event)
+                            cross_corr_I_E_event = compute_cross_correlation(I_input_event, E_input_event)
+                            cross_corr_C_C_event = compute_cross_correlation(C_input_event, C_input_event)
+
+                                                    # Saving event-based cross-correlations
+                            @save joinpath(dir_name_in, "cross_corr_E_E_event.jld2") cross_corr_E_E_event
+                            @save joinpath(dir_name_in, "cross_corr_I_I_event.jld2") cross_corr_I_I_event
+                            @save joinpath(dir_name_in, "cross_corr_E_I_event.jld2") cross_corr_E_I_event
+                            @save joinpath(dir_name_in, "cross_corr_I_E_event.jld2") cross_corr_I_E_event
+                            @save joinpath(dir_name_in, "cross_corr_C_C_event.jld2") cross_corr_C_C_event
+
+                            plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
+                        end 
+                        # Plot correlations for event-based inputs
+                        
+                        if isempty(E_input_nonevent) || isempty(I_input_nonevent)
+                            println("skip non-Event")
+                         else
+                            # Create combined input for nonevents
+                            C_input_nonevent = E_input_nonevent .+ I_input_nonevent
+
+                            # Compute average correlations for nonevent-based inputs
+                            avg_correlation_E_I_nonevent = compute_correlation(E_input_nonevent, I_input_nonevent)
+                            avg_correlation_E_E_nonevent = compute_correlation(E_input_nonevent, E_input_nonevent)
+                            avg_correlation_I_I_nonevent = compute_correlation(I_input_nonevent, I_input_nonevent)
+                            avg_correlation_C_C_nonevent = compute_correlation(C_input_nonevent, C_input_nonevent)
+
+                            println("Nonevent-based avg correlation (E-I): ", avg_correlation_E_I_nonevent)
+                            println("Nonevent-based avg correlation (E-E): ", avg_correlation_E_E_nonevent)
+                            println("Nonevent-based avg correlation (I-I): ", avg_correlation_I_I_nonevent)
+                            println("Nonevent-based avg correlation (C-C): ", avg_correlation_C_C_nonevent)
+
+                            # Compute cross-correlations for nonevent-based inputs
+                            cross_corr_E_E_nonevent = compute_cross_correlation(E_input_nonevent, E_input_nonevent)
+                            cross_corr_I_I_nonevent = compute_cross_correlation(I_input_nonevent, I_input_nonevent)
+                            cross_corr_E_I_nonevent = compute_cross_correlation(E_input_nonevent, I_input_nonevent)
+                            cross_corr_I_E_nonevent = compute_cross_correlation(I_input_nonevent, E_input_nonevent)
+                            cross_corr_C_C_nonevent = compute_cross_correlation(C_input_nonevent, C_input_nonevent)
+                
+                            # Plot correlations for nonevent-based inputs
+
+
+                            plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
+                            
+
+                            # Saving nonevent-based cross-correlations
+                            @save joinpath(dir_name_in, "cross_corr_E_E_nonevent.jld2") cross_corr_E_E_nonevent
+                            @save joinpath(dir_name_in, "cross_corr_I_I_nonevent.jld2") cross_corr_I_I_nonevent
+                            @save joinpath(dir_name_in, "cross_corr_E_I_nonevent.jld2") cross_corr_E_I_nonevent
+                            @save joinpath(dir_name_in, "cross_corr_I_E_nonevent.jld2") cross_corr_I_E_nonevent
+                            @save joinpath(dir_name_in, "cross_corr_C_C_nonevent.jld2") cross_corr_C_C_nonevent
+
+                         end
                 end
 
         end
@@ -709,7 +723,7 @@ end
 Ncells = parse(Int, get_arg("--Ncells", "5000"))
 Ne = parse(Int, get_arg("--Ne", "4000"))
 Ni = parse(Int, get_arg("--Ni", "1000"))
-T = parse(Int, get_arg("--T", "800"))
+T = parse(Int, get_arg("--T", "1000"))
 taue = parse(Int, get_arg("--taue", "15"))
 taui = parse(Int, get_arg("--taui", "10"))
 pei = parse(Float64, get_arg("--pei", "0.5"))
@@ -749,6 +763,8 @@ stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
+
+event_thre = parse(Float64, get_arg("--event_thre", "5.0"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
@@ -798,5 +814,6 @@ run_experiment(;Ncells,
     stimstr_2,
     c_noise,
     dir_name_in,
-    corr_sign
+    corr_sign,
+    event_thre
 )

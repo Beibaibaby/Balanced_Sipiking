@@ -101,7 +101,8 @@ function run_experiment(;
     stim_start_2,
     stimstr_2,
     c_noise,
-    dir_name_in
+    dir_name_in,
+    corr_sign
 )
         
         doplot = true
@@ -393,223 +394,223 @@ function run_experiment(;
 
 
 
-
+               if corr_sign
                 
-                #### Codes for searching events
-                # Assuming step_size in ms and time_values array is in place
-                buffer_before = round(Int, 100 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                buffer_after = round(Int,  200/ step_size)   # 200 ms after in steps, rounded to nearest integer
-                event_thre = 2.5
-                # Calculate overall average for excitatory rates
-                overall_avg_e_rate = mean(e_rate)
+                        #### Codes for searching events
+                        # Assuming step_size in ms and time_values array is in place
+                        buffer_before = round(Int, 10 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                        buffer_after = round(Int,  10/ step_size)   # 200 ms after in steps, rounded to nearest integer
+                        event_thre = 0.5
+                        # Calculate overall average for excitatory rates
+                        overall_avg_e_rate = mean(e_rate)
 
-                # Initialize array to store excursion periods
-                excursions_e = []
+                        # Initialize array to store excursion periods
+                        excursions_e = []
 
-                # Identify excursions for excitatory rates
-                start_index_e = -1
-                for (index, rate) in enumerate(e_rate)
-                    if rate > overall_avg_e_rate + event_thre
-                        if start_index_e == -1
-                            start_index_e = max(1, index - buffer_before)
+                        # Identify excursions for excitatory rates
+                        start_index_e = -1
+                        for (index, rate) in enumerate(e_rate)
+                            if rate > overall_avg_e_rate + event_thre
+                                if start_index_e == -1
+                                    start_index_e = max(1, index - buffer_before)
+                                end
+                            else
+                                if start_index_e != -1
+                                    end_index_e = min(length(e_rate), index + buffer_after)
+                                    push!(excursions_e, (time_values[start_index_e], time_values[end_index_e]))
+                                    start_index_e = -1  # Reset start index
+                                end
+                            end
                         end
-                    else
+
+                        # Check for an excursion at the end of the time series
                         if start_index_e != -1
-                            end_index_e = min(length(e_rate), index + buffer_after)
+                            end_index_e = min(length(e_rate), length(time_values))
                             push!(excursions_e, (time_values[start_index_e], time_values[end_index_e]))
-                            start_index_e = -1  # Reset start index
                         end
-                    end
+
+                        # Excursions including buffers are now stored in excursions_e
+
+                        # Assuming excursions_e contains the start and end times of event periods
+
+                        ########################Plot firing rates#############################
+
+                        p_event = plot(size=plot_size, left_margin=plot_margin)
+
+                        # Plot grey rectangles for event periods
+                        for (start_time, end_time) in excursions_e
+                            vspan!(p_event, [start_time, end_time], color=:grey, alpha=0.3,label=false)
+                        end
+
+                        # Add the excitatory and inhibitory rates to the plot
+                        plot!(p_event, time_values, e_rate, label="Excitatory", lw=2, linecolor=:red, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise")
+                        plot!(p_event, time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
+
+                        # Set plot labels and title
+                        xlabel!(p_event, "Time (ms)")
+                        ylabel!(p_event, "Firing rate (Hz)")
+
+                        fig_filename = "$dir_name/plot_FR_event_$timestamp_str.png"
+
+                        # Save the figure
+                        savefig(p_event, fig_filename)
+
+
+                        #########################ploting end###########################################
+                        # Initialize arrays for event and nonevent segments
+                        E_input_event = []
+                        E_input_nonevent = []
+
+                        # Initialize the starting index for nonevent segments
+                        start_nonevent_index = 1
+
+                        # Loop through each excursion period
+                        for (start_time, end_time) in excursions_e
+                            # Convert times to indices (assuming time_values is in sync with E_input)
+                            start_index = findfirst(≥(start_time), time_values)
+                            end_index = findfirst(≥(end_time), time_values)
+
+                            # Extract event segments
+                            event_segment = E_input[:, start_index:end_index]
+                            push!(E_input_event, event_segment)
+
+                            # Extract nonevent segments
+                            nonevent_segment = E_input[:, start_nonevent_index:start_index-1]
+                            push!(E_input_nonevent, nonevent_segment)
+
+                            # Update the start index for the next nonevent segment
+                            start_nonevent_index = end_index + 1
+                        end
+
+                        # Handle the final nonevent segment after the last excursion
+                        final_nonevent_segment = E_input[:, start_nonevent_index:end]
+                        push!(E_input_nonevent, final_nonevent_segment)
+
+                        # Concatenate the segments
+                        E_input_event = hcat(E_input_event...)
+                        E_input_nonevent = hcat(E_input_nonevent...)
+
+                        # Initialize arrays for event and nonevent segments
+                        I_input_event = []
+                        I_input_nonevent = []
+
+                        # Initialize the starting index for nonevent segments
+                        start_nonevent_index = 1
+
+                        # Loop through each excursion period
+                        for (start_time, end_time) in excursions_e
+                            # Convert times to indices (assuming time_values is in sync with I_input)
+                            start_index = findfirst(≥(start_time), time_values)
+                            end_index = findfirst(≥(end_time), time_values)
+
+                            # Extract event segments
+                            event_segment = I_input[:, start_index:end_index]
+                            push!(I_input_event, event_segment)
+
+                            # Extract nonevent segments
+                            nonevent_segment = I_input[:, start_nonevent_index:start_index-1]
+                            push!(I_input_nonevent, nonevent_segment)
+
+                            # Update the start index for the next nonevent segment
+                            start_nonevent_index = end_index + 1
+                        end
+
+                        # Handle the final nonevent segment after the last excursion
+                        final_nonevent_segment = I_input[:, start_nonevent_index:end]
+                        push!(I_input_nonevent, final_nonevent_segment)
+
+                        # Concatenate the segments
+                        I_input_event = hcat(I_input_event...)
+                        I_input_nonevent = hcat(I_input_nonevent...)
+                        
+                        C_input = E_input .+ I_input
+
+                        avg_correlation_E_I=compute_correlation(E_input, I_input)
+                        avg_correlation_E_E=compute_correlation(E_input, E_input)
+                        avg_correlation_I_I=compute_correlation(I_input, I_input)
+                        avg_correlation_C_C=compute_correlation(C_input, C_input)
+
+                        println("avg correlation(E-I): ", avg_correlation_E_I)
+                        println("avg correlation(E-E): ", avg_correlation_E_E)
+                        println("avg correlation(I-I): ", avg_correlation_I_I)
+                        println("avg correlation(C-C): ", avg_correlation_C_C)
+
+                        cross_corr_E_E=compute_cross_correlation(E_input, E_input)
+                        cross_corr_I_I=compute_cross_correlation(I_input, I_input)
+                        cross_corr_E_I=compute_cross_correlation(E_input, I_input)
+                        cross_corr_I_E=compute_cross_correlation(I_input, E_input)
+                        cross_corr_C_C=compute_cross_correlation(C_input, C_input)
+
+                        # Create combined input for events
+                        C_input_event = E_input_event .+ I_input_event
+                        
+                        # Compute average correlations for event-based inputs
+                        avg_correlation_E_I_event = compute_correlation(E_input_event, I_input_event)
+                        avg_correlation_E_E_event = compute_correlation(E_input_event, E_input_event)
+                        avg_correlation_I_I_event = compute_correlation(I_input_event, I_input_event)
+                        avg_correlation_C_C_event = compute_correlation(C_input_event, C_input_event)
+
+                        println("Event-based avg correlation (E-I): ", avg_correlation_E_I_event)
+                        println("Event-based avg correlation (E-E): ", avg_correlation_E_E_event)
+                        println("Event-based avg correlation (I-I): ", avg_correlation_I_I_event)
+                        println("Event-based avg correlation (C-C): ", avg_correlation_C_C_event)
+
+                        # Compute cross-correlations for event-based inputs
+                        cross_corr_E_E_event = compute_cross_correlation(E_input_event, E_input_event)
+                        cross_corr_I_I_event = compute_cross_correlation(I_input_event, I_input_event)
+                        cross_corr_E_I_event = compute_cross_correlation(E_input_event, I_input_event)
+                        cross_corr_I_E_event = compute_cross_correlation(I_input_event, E_input_event)
+                        cross_corr_C_C_event = compute_cross_correlation(C_input_event, C_input_event)
+
+                        # Plot correlations for event-based inputs
+
+                        # Create combined input for nonevents
+                        C_input_nonevent = E_input_nonevent .+ I_input_nonevent
+
+                        # Compute average correlations for nonevent-based inputs
+                        avg_correlation_E_I_nonevent = compute_correlation(E_input_nonevent, I_input_nonevent)
+                        avg_correlation_E_E_nonevent = compute_correlation(E_input_nonevent, E_input_nonevent)
+                        avg_correlation_I_I_nonevent = compute_correlation(I_input_nonevent, I_input_nonevent)
+                        avg_correlation_C_C_nonevent = compute_correlation(C_input_nonevent, C_input_nonevent)
+
+                        println("Nonevent-based avg correlation (E-I): ", avg_correlation_E_I_nonevent)
+                        println("Nonevent-based avg correlation (E-E): ", avg_correlation_E_E_nonevent)
+                        println("Nonevent-based avg correlation (I-I): ", avg_correlation_I_I_nonevent)
+                        println("Nonevent-based avg correlation (C-C): ", avg_correlation_C_C_nonevent)
+
+                        # Compute cross-correlations for nonevent-based inputs
+                        cross_corr_E_E_nonevent = compute_cross_correlation(E_input_nonevent, E_input_nonevent)
+                        cross_corr_I_I_nonevent = compute_cross_correlation(I_input_nonevent, I_input_nonevent)
+                        cross_corr_E_I_nonevent = compute_cross_correlation(E_input_nonevent, I_input_nonevent)
+                        cross_corr_I_E_nonevent = compute_cross_correlation(I_input_nonevent, E_input_nonevent)
+                        cross_corr_C_C_nonevent = compute_cross_correlation(C_input_nonevent, C_input_nonevent)
+            
+                        # Plot correlations for nonevent-based inputs
+                        plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
+                        
+                        plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
+                        plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
+                        
+                        @save joinpath(dir_name_in, "cross_corr_E_E.jld2") cross_corr_E_E
+                        @save joinpath(dir_name_in, "cross_corr_I_I.jld2") cross_corr_I_I
+                        @save joinpath(dir_name_in, "cross_corr_E_I.jld2") cross_corr_E_I
+                        @save joinpath(dir_name_in, "cross_corr_I_E.jld2") cross_corr_I_E
+                        @save joinpath(dir_name_in, "cross_corr_C_C.jld2") cross_corr_C_C
+
+                        # Saving event-based cross-correlations
+                        @save joinpath(dir_name_in, "cross_corr_E_E_event.jld2") cross_corr_E_E_event
+                        @save joinpath(dir_name_in, "cross_corr_I_I_event.jld2") cross_corr_I_I_event
+                        @save joinpath(dir_name_in, "cross_corr_E_I_event.jld2") cross_corr_E_I_event
+                        @save joinpath(dir_name_in, "cross_corr_I_E_event.jld2") cross_corr_I_E_event
+                        @save joinpath(dir_name_in, "cross_corr_C_C_event.jld2") cross_corr_C_C_event
+
+                        # Saving nonevent-based cross-correlations
+                        @save joinpath(dir_name_in, "cross_corr_E_E_nonevent.jld2") cross_corr_E_E_nonevent
+                        @save joinpath(dir_name_in, "cross_corr_I_I_nonevent.jld2") cross_corr_I_I_nonevent
+                        @save joinpath(dir_name_in, "cross_corr_E_I_nonevent.jld2") cross_corr_E_I_nonevent
+                        @save joinpath(dir_name_in, "cross_corr_I_E_nonevent.jld2") cross_corr_I_E_nonevent
+                        @save joinpath(dir_name_in, "cross_corr_C_C_nonevent.jld2") cross_corr_C_C_nonevent
                 end
-
-                # Check for an excursion at the end of the time series
-                if start_index_e != -1
-                    end_index_e = min(length(e_rate), length(time_values))
-                    push!(excursions_e, (time_values[start_index_e], time_values[end_index_e]))
-                end
-
-                # Excursions including buffers are now stored in excursions_e
-
-                # Assuming excursions_e contains the start and end times of event periods
-
-                ########################Plot firing rates#############################
-
-                p_event = plot(size=plot_size, left_margin=plot_margin)
-
-                # Plot grey rectangles for event periods
-                for (start_time, end_time) in excursions_e
-                    vspan!(p_event, [start_time, end_time], color=:grey, alpha=0.3,label=false)
-                end
-
-                # Add the excitatory and inhibitory rates to the plot
-                plot!(p_event, time_values, e_rate, label="Excitatory", lw=2, linecolor=:red, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise")
-                plot!(p_event, time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
-
-                # Set plot labels and title
-                xlabel!(p_event, "Time (ms)")
-                ylabel!(p_event, "Firing rate (Hz)")
-
-                fig_filename = "$dir_name/plot_FR_event_$timestamp_str.png"
-
-                # Save the figure
-                savefig(p_event, fig_filename)
-
-
-                #########################ploting end###########################################
-                # Initialize arrays for event and nonevent segments
-                E_input_event = []
-                E_input_nonevent = []
-
-                # Initialize the starting index for nonevent segments
-                start_nonevent_index = 1
-
-                # Loop through each excursion period
-                for (start_time, end_time) in excursions_e
-                    # Convert times to indices (assuming time_values is in sync with E_input)
-                    start_index = findfirst(≥(start_time), time_values)
-                    end_index = findfirst(≥(end_time), time_values)
-
-                    # Extract event segments
-                    event_segment = E_input[:, start_index:end_index]
-                    push!(E_input_event, event_segment)
-
-                    # Extract nonevent segments
-                    nonevent_segment = E_input[:, start_nonevent_index:start_index-1]
-                    push!(E_input_nonevent, nonevent_segment)
-
-                    # Update the start index for the next nonevent segment
-                    start_nonevent_index = end_index + 1
-                end
-
-                # Handle the final nonevent segment after the last excursion
-                final_nonevent_segment = E_input[:, start_nonevent_index:end]
-                push!(E_input_nonevent, final_nonevent_segment)
-
-                # Concatenate the segments
-                E_input_event = hcat(E_input_event...)
-                E_input_nonevent = hcat(E_input_nonevent...)
-
-                # Initialize arrays for event and nonevent segments
-                I_input_event = []
-                I_input_nonevent = []
-
-                # Initialize the starting index for nonevent segments
-                start_nonevent_index = 1
-
-                # Loop through each excursion period
-                for (start_time, end_time) in excursions_e
-                    # Convert times to indices (assuming time_values is in sync with I_input)
-                    start_index = findfirst(≥(start_time), time_values)
-                    end_index = findfirst(≥(end_time), time_values)
-
-                    # Extract event segments
-                    event_segment = I_input[:, start_index:end_index]
-                    push!(I_input_event, event_segment)
-
-                    # Extract nonevent segments
-                    nonevent_segment = I_input[:, start_nonevent_index:start_index-1]
-                    push!(I_input_nonevent, nonevent_segment)
-
-                    # Update the start index for the next nonevent segment
-                    start_nonevent_index = end_index + 1
-                end
-
-                # Handle the final nonevent segment after the last excursion
-                final_nonevent_segment = I_input[:, start_nonevent_index:end]
-                push!(I_input_nonevent, final_nonevent_segment)
-
-                # Concatenate the segments
-                I_input_event = hcat(I_input_event...)
-                I_input_nonevent = hcat(I_input_nonevent...)
-                
-                C_input = E_input .+ I_input
-
-                avg_correlation_E_I=compute_correlation(E_input, I_input)
-                avg_correlation_E_E=compute_correlation(E_input, E_input)
-                avg_correlation_I_I=compute_correlation(I_input, I_input)
-                avg_correlation_C_C=compute_correlation(C_input, C_input)
-
-                println("avg correlation(E-I): ", avg_correlation_E_I)
-                println("avg correlation(E-E): ", avg_correlation_E_E)
-                println("avg correlation(I-I): ", avg_correlation_I_I)
-                println("avg correlation(C-C): ", avg_correlation_C_C)
-
-                cross_corr_E_E=compute_cross_correlation(E_input, E_input)
-                cross_corr_I_I=compute_cross_correlation(I_input, I_input)
-                cross_corr_E_I=compute_cross_correlation(E_input, I_input)
-                cross_corr_I_E=compute_cross_correlation(I_input, E_input)
-                cross_corr_C_C=compute_cross_correlation(C_input, C_input)
-
-                # Create combined input for events
-                C_input_event = E_input_event .+ I_input_event
-                
-                # Compute average correlations for event-based inputs
-                avg_correlation_E_I_event = compute_correlation(E_input_event, I_input_event)
-                avg_correlation_E_E_event = compute_correlation(E_input_event, E_input_event)
-                avg_correlation_I_I_event = compute_correlation(I_input_event, I_input_event)
-                avg_correlation_C_C_event = compute_correlation(C_input_event, C_input_event)
-
-                println("Event-based avg correlation (E-I): ", avg_correlation_E_I_event)
-                println("Event-based avg correlation (E-E): ", avg_correlation_E_E_event)
-                println("Event-based avg correlation (I-I): ", avg_correlation_I_I_event)
-                println("Event-based avg correlation (C-C): ", avg_correlation_C_C_event)
-
-                # Compute cross-correlations for event-based inputs
-                cross_corr_E_E_event = compute_cross_correlation(E_input_event, E_input_event)
-                cross_corr_I_I_event = compute_cross_correlation(I_input_event, I_input_event)
-                cross_corr_E_I_event = compute_cross_correlation(E_input_event, I_input_event)
-                cross_corr_I_E_event = compute_cross_correlation(I_input_event, E_input_event)
-                cross_corr_C_C_event = compute_cross_correlation(C_input_event, C_input_event)
-
-                # Plot correlations for event-based inputs
-
-                # Create combined input for nonevents
-                C_input_nonevent = E_input_nonevent .+ I_input_nonevent
-
-                # Compute average correlations for nonevent-based inputs
-                avg_correlation_E_I_nonevent = compute_correlation(E_input_nonevent, I_input_nonevent)
-                avg_correlation_E_E_nonevent = compute_correlation(E_input_nonevent, E_input_nonevent)
-                avg_correlation_I_I_nonevent = compute_correlation(I_input_nonevent, I_input_nonevent)
-                avg_correlation_C_C_nonevent = compute_correlation(C_input_nonevent, C_input_nonevent)
-
-                println("Nonevent-based avg correlation (E-I): ", avg_correlation_E_I_nonevent)
-                println("Nonevent-based avg correlation (E-E): ", avg_correlation_E_E_nonevent)
-                println("Nonevent-based avg correlation (I-I): ", avg_correlation_I_I_nonevent)
-                println("Nonevent-based avg correlation (C-C): ", avg_correlation_C_C_nonevent)
-
-                # Compute cross-correlations for nonevent-based inputs
-                cross_corr_E_E_nonevent = compute_cross_correlation(E_input_nonevent, E_input_nonevent)
-                cross_corr_I_I_nonevent = compute_cross_correlation(I_input_nonevent, I_input_nonevent)
-                cross_corr_E_I_nonevent = compute_cross_correlation(E_input_nonevent, I_input_nonevent)
-                cross_corr_I_E_nonevent = compute_cross_correlation(I_input_nonevent, E_input_nonevent)
-                cross_corr_C_C_nonevent = compute_cross_correlation(C_input_nonevent, C_input_nonevent)
-    
-                # Plot correlations for nonevent-based inputs
-                plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
-                
-                plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
-                plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
-                
-                @save joinpath(dir_name_in, "cross_corr_E_E.jld2") cross_corr_E_E
-                @save joinpath(dir_name_in, "cross_corr_I_I.jld2") cross_corr_I_I
-                @save joinpath(dir_name_in, "cross_corr_E_I.jld2") cross_corr_E_I
-                @save joinpath(dir_name_in, "cross_corr_I_E.jld2") cross_corr_I_E
-                @save joinpath(dir_name_in, "cross_corr_C_C.jld2") cross_corr_C_C
-
-                # Saving event-based cross-correlations
-                @save joinpath(dir_name_in, "cross_corr_E_E_event.jld2") cross_corr_E_E_event
-                @save joinpath(dir_name_in, "cross_corr_I_I_event.jld2") cross_corr_I_I_event
-                @save joinpath(dir_name_in, "cross_corr_E_I_event.jld2") cross_corr_E_I_event
-                @save joinpath(dir_name_in, "cross_corr_I_E_event.jld2") cross_corr_I_E_event
-                @save joinpath(dir_name_in, "cross_corr_C_C_event.jld2") cross_corr_C_C_event
-
-                # Saving nonevent-based cross-correlations
-                @save joinpath(dir_name_in, "cross_corr_E_E_nonevent.jld2") cross_corr_E_E_nonevent
-                @save joinpath(dir_name_in, "cross_corr_I_I_nonevent.jld2") cross_corr_I_I_nonevent
-                @save joinpath(dir_name_in, "cross_corr_E_I_nonevent.jld2") cross_corr_E_I_nonevent
-                @save joinpath(dir_name_in, "cross_corr_I_E_nonevent.jld2") cross_corr_I_E_nonevent
-                @save joinpath(dir_name_in, "cross_corr_C_C_nonevent.jld2") cross_corr_C_C_nonevent
-
 
         end
 
@@ -751,7 +752,8 @@ stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
-dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results/corr/exp_$timestamp_str")
+dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
+corr_sign = parse(Bool, get_arg("--corr_sign", "true")) 
 
 if !isdir(dir_name_in)
     mkpath(dir_name_in)
@@ -795,5 +797,6 @@ run_experiment(;Ncells,
     stim_start_2,
     stimstr_2,
     c_noise,
-    dir_name_in
+    dir_name_in,
+    corr_sign
 )

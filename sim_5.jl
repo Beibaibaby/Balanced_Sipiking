@@ -347,7 +347,7 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
 
     Ncells, Nsteps = size(E_input)
     
-    num_pairs=round(Int,Ncells/1.5)
+    num_pairs=round(Int,Ncells/1.1)
 
 
     # Ensure the number of pairs is less than or equal to Ncells

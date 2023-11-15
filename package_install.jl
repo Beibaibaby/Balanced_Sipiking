@@ -8,5 +8,6 @@ using Pkg
 #Pkg.add("JLD2")
 #Pkg.add("SharedArrays")
 #Pkg.add("Distributed")
-Pkg.update()
-Pkg.build("GR")
+#Pkg.update()
+#Pkg.build("GR")
+#Pkg.add("FilePathsBase")

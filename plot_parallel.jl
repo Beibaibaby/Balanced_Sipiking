@@ -2,29 +2,41 @@ using JLD2
 using FilePathsBase
 using Plots
 include("sim_5.jl") 
-# Function to load and average correlation data
+using JLD2
+using Measures
+
 function average_correlations(main_dir::String, file_name::String)
-    total_corr = nothing
+    total_corr = Dict()
     count = 0
 
-    # Iterate over each subdirectory in the main directory
     for sub_dir in readdir(main_dir, join=true)
         if isdir(sub_dir)
             file_path = joinpath(sub_dir, file_name)
+
             if isfile(file_path)
-                @load file_path corr_data
-                if total_corr === nothing
-                    total_corr = corr_data
-                else
-                    total_corr .+= corr_data
+                #println("Loading file: $file_path")  # Debug statement
+                corr_data = load_object(file_path)
+                #println("Loaded data: ", corr_data)  # Debug statement
+                # Aggregate data from each file
+                for (key, value) in corr_data
+                    total_corr[key] = get(total_corr, key, 0) + value
                 end
                 count += 1
             end
         end
     end
 
-    return count > 0 ? total_corr / count : total_corr
+    # Average the aggregated data
+    if count > 0
+        for key in keys(total_corr)
+            total_corr[key] /= count
+        end
+    end
+
+    return total_corr
 end
+
+
 
 function get_arg(key, default)
     index = findfirst(==(key), ARGS)
@@ -36,6 +48,7 @@ end
 
 # Retrieve the main directory from command-line arguments
 main_dir = get_arg("--main_dir", "/default/path/to/main_dir")
+
 
 # Average each type of correlation
 avg_cross_corr_E_E = average_correlations(main_dir, "cross_corr_E_E.jld2")

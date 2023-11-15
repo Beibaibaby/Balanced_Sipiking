@@ -22,12 +22,3 @@ mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
 julia run_5_parallel.jl --T 200 --dir_name_in "$dir_name_in"
-
-# Check if the current task is the last one in the array
-if [ "$SLURM_ARRAY_TASK_ID" -eq 10 ]; then
-    # Define the main directory where all the results are stored
-    main_dir="/gpfs/data/doiron-lab/draco_results/corr/exp_${JOB_ID}"
-
-    # Run the Julia script to process and plot the results
-    julia plot_parallel.jl --main_dir "$main_dir"
-fi

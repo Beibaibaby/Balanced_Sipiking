@@ -1,7 +1,7 @@
 using JLD2
 using FilePathsBase
 using Plots
-include("sim_5.jl") 
+include("sim_6.jl") 
 using JLD2
 using Measures
 

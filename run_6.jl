@@ -17,7 +17,7 @@ using Distributions
 #@everywhere using SharedArrays
 #@everywhere include("sim_inject_3.0.0.jl") 
 using SharedArrays
-include("sim_5.jl") 
+include("sim_6.jl") 
 
 struct NetworkParameters
     Ncells::Int
@@ -160,7 +160,13 @@ function run_experiment(;
                 #print(Ne)
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
-
+                
+                if corr_sign
+                    if any(x -> x > 150, e_rate)
+                        println("Element in e_rate greater than 150 found. Exiting script.")
+                        exit()
+                    end
+                end
 
                 # Compute the time values based on window_size and step_size
                 n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
@@ -191,9 +197,9 @@ function run_experiment(;
 
                 
                 #Create the directory for results
-                if !isdir(dir_name)
-                    mkdir(dir_name)
-                end
+                #if !isdir(dir_name)
+                #    mkdir(dir_name)
+                #end
 
                 plot_curve(d_ee, f_ee, d_ie, f_ie, "$dir_name/plot_curve_$timestamp_str.png")
                 
@@ -743,10 +749,10 @@ ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
-sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.25"))
+sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.3"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
-scale_noise = parse(Float64, get_arg("--scale_noise", "2.5"))
-c_noise = parse(Float64, get_arg("--c_noise", "0.5"))
+scale_noise = parse(Float64, get_arg("--scale_noise", "1"))
+c_noise = parse(Float64, get_arg("--c_noise", "0.2"))
 
 env = parse(Int, get_arg("--env", "3"))
 
@@ -768,8 +774,11 @@ event_thre = parse(Float64, get_arg("--event_thre", "5.0"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+
+
 dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
-corr_sign = parse(Bool, get_arg("--corr_sign", "true")) 
+
+corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
 if !isdir(dir_name_in)
     mkpath(dir_name_in)

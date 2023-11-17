@@ -770,7 +770,7 @@ stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
 
-event_thre = parse(Float64, get_arg("--event_thre", "5.0"))
+event_thre = parse(Float64, get_arg("--event_thre", "2.0"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")

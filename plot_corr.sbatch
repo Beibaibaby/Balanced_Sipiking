@@ -9,7 +9,7 @@
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.out
 #SBATCH --error=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.err
-#SBATCH --array=1-10%10
+#SBATCH --array=1-50%50
 
 # Use SLURM_ARRAY_JOB_ID as the identifier
 ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
@@ -23,7 +23,7 @@ dir_name_in="/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}/${SLUR
 mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
-julia run_6.jl --T 3000 --dir_name_in "$dir_name_in"
+julia run_6.jl --T 20000 --dir_name_in "$dir_name_in" --c_noise 0.6 --sigma_noise 1.3 --event_thre 3.0
 
 # Create a file indicating the completion of this particular task
 

@@ -165,12 +165,12 @@ time, Vs, spike_times, Hs = simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_
 
 # Calculate depression ratio H_5/H_1
 depression_ratio = Hs[2] / Hs[1]
-println("Depression ratio H_5/H_1: ", depression_ratio)
+#println("Depression ratio H_5/H_1: ", depression_ratio)
 
 
 # Plot results and save to file
-output_filename = "./figs/working.png"
-plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)
+#output_filename = "./figs/working.png"
+#plot_LIF_simulation(time, Vs, spike_times, S_input, output_filename)
 
 using Plots
 
@@ -220,4 +220,4 @@ plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", 
 plot!(temporal_frequencies, depression_ratios_fixed_F, label="E->I", marker=:circle, linewidth=2, linecolor=:purple,markercolor=:purple)
 
 # Save figure
-savefig("depression_ratio_vs_temporal_frequency_compare.png")
+#savefig("depression_ratio_vs_temporal_frequency_compare.png")

@@ -48,7 +48,7 @@ end
 
 # Retrieve the main directory from command-line arguments
 main_dir = get_arg("--main_dir", "/default/path/to/main_dir")
-
+event_thre = parse(Float64, get_arg("--event_thre", "2.0"))
 
 # Average each type of correlation
 avg_cross_corr_E_E = average_correlations(main_dir, "cross_corr_E_E.jld2")
@@ -72,11 +72,11 @@ avg_cross_corr_I_E_nonevent = average_correlations(main_dir, "cross_corr_I_E_non
 avg_cross_corr_C_C_nonevent = average_correlations(main_dir, "cross_corr_C_C_nonevent.jld2")
 
 # Plot the averaged correlations for overall
-plot_correlations(avg_cross_corr_E_E, avg_cross_corr_I_I, avg_cross_corr_E_I, avg_cross_corr_I_E, avg_cross_corr_C_C, joinpath(main_dir, "plot_corr_overall.png"))
+plot_correlations(avg_cross_corr_E_E, avg_cross_corr_I_I, avg_cross_corr_E_I, avg_cross_corr_I_E, avg_cross_corr_C_C, joinpath(main_dir, "plot_corr_overall, event threshold=$event_thre.png"))
 
 # Plot the averaged correlations for event-based
-plot_correlations(avg_cross_corr_E_E_event, avg_cross_corr_I_I_event, avg_cross_corr_E_I_event, avg_cross_corr_I_E_event, avg_cross_corr_C_C_event, joinpath(main_dir, "plot_corr_events.png"))
+plot_correlations(avg_cross_corr_E_E_event, avg_cross_corr_I_I_event, avg_cross_corr_E_I_event, avg_cross_corr_I_E_event, avg_cross_corr_C_C_event, joinpath(main_dir, "plot_corr_events, event threshold=$event_thre.png"))
 
 # Plot the averaged correlations for nonevent-based
-plot_correlations(avg_cross_corr_E_E_nonevent, avg_cross_corr_I_I_nonevent, avg_cross_corr_E_I_nonevent, avg_cross_corr_I_E_nonevent, avg_cross_corr_C_C_nonevent, joinpath(main_dir, "plot_corr_nonevents.png"))
+plot_correlations(avg_cross_corr_E_E_nonevent, avg_cross_corr_I_I_nonevent, avg_cross_corr_E_I_nonevent, avg_cross_corr_I_E_nonevent, avg_cross_corr_C_C_nonevent, joinpath(main_dir, "plot_corr_nonevents, event threshold=$event_thre.png"))
 

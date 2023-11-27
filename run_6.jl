@@ -154,7 +154,7 @@ function run_experiment(;
                 plot_margin = 50mm
 
                 # Parameters for sliding window
-                window_size = 20  # in ms
+                window_size = 25  # in ms
                 step_size = 5     # in ms
 
                 #print(Ne)
@@ -179,7 +179,7 @@ function run_experiment(;
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre" , ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 else
@@ -187,7 +187,7 @@ function run_experiment(;
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firinçg rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 end
@@ -405,8 +405,8 @@ function run_experiment(;
                 
                         #### Codes for searching events
                         # Assuming step_size in ms and time_values array is in place
-                        buffer_before = round(Int, 50 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                        buffer_after = round(Int,  100/ step_size)   # 200 ms after in steps, rounded to nearest integer
+                        buffer_before = round(Int, 20 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                        buffer_after = round(Int,  30/ step_size)   # 200 ms after in steps, rounded to nearest integer
  
                         # Calculate overall average for excitatory rates
                         overall_avg_e_rate = mean(e_rate)
@@ -554,7 +554,7 @@ function run_experiment(;
                         @save joinpath(dir_name_in, "cross_corr_I_E.jld2") cross_corr_I_E
                         @save joinpath(dir_name_in, "cross_corr_C_C.jld2") cross_corr_C_C
 
-                        plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"))
+                        plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, joinpath(dir_name, "plot_corr_overall.png"),event_thre)
                             
 
                         # Create combined input for events
@@ -588,7 +588,7 @@ function run_experiment(;
                             @save joinpath(dir_name_in, "cross_corr_I_E_event.jld2") cross_corr_I_E_event
                             @save joinpath(dir_name_in, "cross_corr_C_C_event.jld2") cross_corr_C_C_event
 
-                            plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"))
+                            plot_correlations(cross_corr_E_E_event, cross_corr_I_I_event, cross_corr_E_I_event, cross_corr_I_E_event, cross_corr_C_C_event, joinpath(dir_name, "plot_corr_events.png"),event_thre)
                         end 
                         # Plot correlations for event-based inputs
                         
@@ -619,7 +619,7 @@ function run_experiment(;
                             # Plot correlations for nonevent-based inputs
 
 
-                            plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"))
+                            plot_correlations(cross_corr_E_E_nonevent, cross_corr_I_I_nonevent, cross_corr_E_I_nonevent, cross_corr_I_E_nonevent, cross_corr_C_C_nonevent, joinpath(dir_name, "plot_corr_nonevents.png"),event_thre)
                             
 
                             # Saving nonevent-based cross-correlations
@@ -712,7 +712,7 @@ function run_experiment(;
             cross_T_T=compute_cross_correlation(TT_pool,TT_pool)
 
             #plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
-            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP,"$dir_name/plot_corr_PSP_mem.png")
+            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP,"$dir_name/plot_corr_PSP_mem.png",event_thre)
 
             plot_cells(v_history, [1, 505, 1005])
 
@@ -776,7 +776,7 @@ timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
 
-dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
+dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_suites/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
 
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 

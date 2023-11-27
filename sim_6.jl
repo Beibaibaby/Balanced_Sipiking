@@ -194,7 +194,14 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         
         if add_noise
             
-           gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
+           #gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
+
+           large_peak_mean = 50
+           small_variance = sigma_noise*0.01
+           large_variance = sigma_noise*0.01
+           peak_ratio = 1000
+
+           gaussian_noise_global=bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
            
         end
 
@@ -304,6 +311,20 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track
 end
 
+function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
+    # Define two normal distributions
+    small_peak = Normal(0, small_variance)
+    large_peak = Normal(large_peak_mean, large_variance)
+
+    # Determine which distribution to sample from
+    if rand() < peak_ratio / (peak_ratio + 1)
+        noise = rand(small_peak)
+    else
+        noise = rand(large_peak)
+    end
+
+    return sqrt(c_noise) * scale_noise * noise * dt
+end
 
 
 function compute_correlation(E_input::Matrix, I_input::Matrix, num_pairs::Int=100)
@@ -427,7 +448,7 @@ end
 
 
 
-function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, output_path)
+function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross_corr_I_E, cross_corr_C_C, output_path, event_thre )
     # Assuming the dictionaries have the same keys
     sorted_keys = sort(collect(keys(cross_corr_E_E)))
     
@@ -447,7 +468,7 @@ function plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I, cross
 
     xlabel!("Tau")
     ylabel!("Correlation")
-    title!("Cross-correlation")
+    title!("Cross-correlation | Event threshold = $event_thre")
     savefig(output_path)
 end
 

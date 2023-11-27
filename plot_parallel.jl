@@ -72,11 +72,34 @@ avg_cross_corr_I_E_nonevent = average_correlations(main_dir, "cross_corr_I_E_non
 avg_cross_corr_C_C_nonevent = average_correlations(main_dir, "cross_corr_C_C_nonevent.jld2")
 
 # Plot the averaged correlations for overall
-plot_correlations(avg_cross_corr_E_E, avg_cross_corr_I_I, avg_cross_corr_E_I, avg_cross_corr_I_E, avg_cross_corr_C_C, joinpath(main_dir, "plot_corr_overall, event threshold=$event_thre.png"))
+plot_correlations(avg_cross_corr_E_E, avg_cross_corr_I_I, avg_cross_corr_E_I, avg_cross_corr_I_E, avg_cross_corr_C_C, joinpath(main_dir, "plot_corr_overall_et=$event_thre.png"))
 
 # Plot the averaged correlations for event-based
-plot_correlations(avg_cross_corr_E_E_event, avg_cross_corr_I_I_event, avg_cross_corr_E_I_event, avg_cross_corr_I_E_event, avg_cross_corr_C_C_event, joinpath(main_dir, "plot_corr_events, event threshold=$event_thre.png"))
+plot_correlations(avg_cross_corr_E_E_event, avg_cross_corr_I_I_event, avg_cross_corr_E_I_event, avg_cross_corr_I_E_event, avg_cross_corr_C_C_event, joinpath(main_dir, "plot_corr_events_et=$event_thre.png"))
 
 # Plot the averaged correlations for nonevent-based
-plot_correlations(avg_cross_corr_E_E_nonevent, avg_cross_corr_I_I_nonevent, avg_cross_corr_E_I_nonevent, avg_cross_corr_I_E_nonevent, avg_cross_corr_C_C_nonevent, joinpath(main_dir, "plot_corr_nonevents, event threshold=$event_thre.png"))
+plot_correlations(avg_cross_corr_E_E_nonevent, avg_cross_corr_I_I_nonevent, avg_cross_corr_E_I_nonevent, avg_cross_corr_I_E_nonevent, avg_cross_corr_C_C_nonevent, joinpath(main_dir, "plot_corr_nonevents_et=$event_thre.png"))
 
+value_E_E_event = avg_cross_corr_E_E_event[0]
+value_C_C_event = avg_cross_corr_C_C_event[0]
+value_I_I_event = avg_cross_corr_I_I_event[0]
+
+value_E_E_nonevent = avg_cross_corr_E_E_nonevent[0]
+value_C_C_nonevent = avg_cross_corr_C_C_nonevent[0]
+value_I_I_nonevent = avg_cross_corr_I_I_nonevent[0]
+
+
+# Prepare data for plotting
+categories = ["E_E", "C_C", "I_I"]
+event_data = [value_E_E_event, value_C_C_event, value_I_I_event]
+nonevent_data = [value_E_E_nonevent, value_C_C_nonevent, value_I_I_nonevent]
+
+# Create the plot
+p = plot(xticks = (1:3, categories))
+scatter!(p, 1:3, event_data, label = "Event", color = :blue)
+scatter!(p, 1:3, nonevent_data, label = "Non-event", color = :red)
+plot!(p, 1:3, event_data, label = "", color = :blue, line = :line)
+plot!(p, 1:3, nonevent_data, label = "", color = :red, line = :line)
+
+# Save the plot to a file
+savefig(p, joinpath(main_dir, "event_vs_non.png"))

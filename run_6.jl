@@ -136,6 +136,9 @@ function run_experiment(;
         else
             dir_name=dir_name_in
             println("nice")
+            if !isdir(dir_name_in)
+                mkpath(dir_name_in)
+            end
         end
 
         file_path_test = joinpath(dir_name, "directory_name.txt")
@@ -431,8 +434,8 @@ function run_experiment(;
                 
                         #### Codes for searching events
                         # Assuming step_size in ms and time_values array is in place
-                        buffer_before = round(Int, 25 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                        buffer_after = round(Int,  55/ step_size)   # 200 ms after in steps, rounded to nearest integer
+                        buffer_before = round(Int, 150 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                        buffer_after = round(Int,  350/ step_size)   # 200 ms after in steps, rounded to nearest integer
  
                         # Calculate overall average for excitatory rates
                         overall_avg_e_rate = mean(e_rate)
@@ -462,14 +465,26 @@ function run_experiment(;
                             push!(excursions_e, (time_values[start_index_e], time_values[end_index_e]))
                         end
 
+                        sorted_excursions_e = sort(excursions_e, by = x -> x[1])  # Sort by start time
+                        merged_excursions_e = []
+
+                        for excursion in sorted_excursions_e
+                            if isempty(merged_excursions_e) || merged_excursions_e[end][2] < excursion[1]
+                                push!(merged_excursions_e, excursion)
+                            else
+                                # Merge overlapping intervals
+                                merged_excursions_e[end] = (merged_excursions_e[end][1], max(merged_excursions_e[end][2], excursion[2]))
+                            end
+                        end
+                        excursions_e=merged_excursions_e
                         # Excursions including buffers are now stored in excursions_e
 
                         # Assuming excursions_e contains the start and end times of event periods
 
                         ########################Plot firing rates#############################
-
+ 
                         p_event = plot(size=plot_size, left_margin=plot_margin)
-
+                     
                         # Plot grey rectangles for event periods
                         for (start_time, end_time) in excursions_e
                             vspan!(p_event, [start_time, end_time], color=:grey, alpha=0.3,label=false)
@@ -788,21 +803,20 @@ d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
-stim_duration= parse(Int, get_arg("--stim_duration", "10"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "150"))
+stim_duration= parse(Int, get_arg("--stim_duration", "5"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "200"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
 
-event_thre = parse(Float64, get_arg("--event_thre", "2.0"))
-peak_ratio = parse(Float64, get_arg("--peak_ratio", "8000"))
+event_thre = parse(Float64, get_arg("--event_thre", "0.65"))
+peak_ratio = parse(Float64, get_arg("--peak_ratio", "20000"))
 large_peak_mean = parse(Float64, get_arg("--large_peak_mean", "200"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
-
 
 dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_suites/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
 

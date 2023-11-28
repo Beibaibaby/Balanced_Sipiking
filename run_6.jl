@@ -53,6 +53,8 @@ struct NetworkParameters
     stim_start_2::Int
     stimstr_2::Float64
     c_noise::Float64
+    peak_ratio::Float64
+    large_peak_mean::Float64
 end
 
 # Define a function to retrieve a value from ARGS or return a default value if not present.
@@ -103,7 +105,9 @@ function run_experiment(;
     c_noise,
     dir_name_in,
     corr_sign,
-    event_thre
+    event_thre,
+    peak_ratio,
+    large_peak_mean
 )
         
         doplot = true
@@ -115,7 +119,34 @@ function run_experiment(;
         # Now, use the provided values to create an instance of the struct:
         
         params = NetworkParameters(Ncells, Ne, Ni, T, taue, taui, pei, pie, pii, pee, K, jie, jei, jii, jee, Nstim, stimstr,stim_duration, stim_start_time,ie_sign,ee_sign,corr_flag, add_noise,
-        sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,stim_duration_2,stim_start_2,stimstr_2,c_noise)
+        sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,stim_duration_2,stim_start_2,stimstr_2,c_noise,peak_ratio,large_peak_mean)
+         
+        timestamp = Dates.now()
+        timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+        if env == 1 
+            dir_name ="/root/autodl-tmp/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
+            if !isdir(dir_name_in)
+                mkpath(dir_name_in)
+            end
+        elseif env == 2
+           dir_name = "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
+           if !isdir(dir_name_in)
+            mkpath(dir_name_in)
+        end
+        else
+            dir_name=dir_name_in
+            println("nice")
+        end
+
+        file_path_test = joinpath(dir_name, "directory_name.txt")
+
+        # Create the directory if it does not exist
+        #isdir(dir_name) || mkdir(dir_name)
+
+        # Open the file in write mode, write the dir_name, and close the file
+        open(file_path_test, "w") do file
+            write(file, dir_name)
+        end
 
         #store it
         #run the stimulus
@@ -126,21 +157,14 @@ function run_experiment(;
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
             params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
             params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
-            params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise)
+            params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise,peak_ratio,large_peak_mean)
         println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
         println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
         
         product_weights_ee = weights_D_ee_track .* weights_F_ee_track
-        timestamp = Dates.now()
-        timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
-        if env == 1 
-            dir_name ="/root/autodl-tmp/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
-        elseif env == 2
-           dir_name = "../figs_paras/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
-        else
-            dir_name=dir_name_in
-            println("nice")
-        end
+
+
+
 
         if doplot 
 
@@ -176,10 +200,10 @@ function run_experiment(;
                 # Add a code to detect low rate or not 
                 if add_noise
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre" , ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre")
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
                 else
@@ -384,7 +408,9 @@ function run_experiment(;
                     "stim_duration_2"=>params.stim_duration_2,
                     "stim_start_2"=>params.stim_start_2,
                     "stimstr_2"=>params.stimstr_2,
-                    "c_noise"=>params.c_noise
+                    "c_noise"=>params.c_noise,
+                    "peak_ratio"=>peak_ratio,
+                    "large_peak_mean"=>large_peak_mean
                 )
 
                 # Now, you can access any of these values using the dictionary's keys, e.g., param_dict["Ne"] or param_dict["jie"].
@@ -405,8 +431,8 @@ function run_experiment(;
                 
                         #### Codes for searching events
                         # Assuming step_size in ms and time_values array is in place
-                        buffer_before = round(Int, 20 / step_size)  # 100 ms before in steps, rounded to nearest integer
-                        buffer_after = round(Int,  30/ step_size)   # 200 ms after in steps, rounded to nearest integer
+                        buffer_before = round(Int, 25 / step_size)  # 100 ms before in steps, rounded to nearest integer
+                        buffer_after = round(Int,  55/ step_size)   # 200 ms after in steps, rounded to nearest integer
  
                         # Calculate overall average for excitatory rates
                         overall_avg_e_rate = mean(e_rate)
@@ -450,7 +476,7 @@ function run_experiment(;
                         end
 
                         # Add the excitatory and inhibitory rates to the plot
-                        plot!(p_event, time_values, e_rate, label="Excitatory", lw=2, linecolor=:red, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre")
+                        plot!(p_event, time_values, e_rate, label="Excitatory", lw=2, linecolor=:red, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
                         plot!(p_event, time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2)
 
                         # Set plot labels and title
@@ -771,6 +797,8 @@ stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
 
 event_thre = parse(Float64, get_arg("--event_thre", "2.0"))
+peak_ratio = parse(Float64, get_arg("--peak_ratio", "8000"))
+large_peak_mean = parse(Float64, get_arg("--large_peak_mean", "200"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
@@ -780,9 +808,7 @@ dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_suit
 
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
-if !isdir(dir_name_in)
-    mkpath(dir_name_in)
-end
+
 
 
 
@@ -824,5 +850,7 @@ run_experiment(;Ncells,
     c_noise,
     dir_name_in,
     corr_sign,
-    event_thre
+    event_thre,
+    peak_ratio,
+    large_peak_mean
 )

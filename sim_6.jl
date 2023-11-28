@@ -10,7 +10,7 @@ include("./src/LIF_1.0.0_compare.jl")
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
     jei_para,jii_para,jee_para, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,
     add_noise,sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,
-    stim_duration_2,stim_start_2,stimstr_2,c_noise)
+    stim_duration_2,stim_start_2,stimstr_2,c_noise,peak_ratio,large_peak_mean)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -196,10 +196,10 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             
            #gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
 
-           large_peak_mean = 50
+           #large_peak_mean = 100
            small_variance = sigma_noise*0.01
            large_variance = sigma_noise*0.01
-           peak_ratio = 1000
+           #peak_ratio = 2000
 
            gaussian_noise_global=bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
            

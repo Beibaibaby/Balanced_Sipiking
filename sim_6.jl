@@ -318,7 +318,7 @@ function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_pea
 
     # Determine which distribution to sample from
     if rand() < peak_ratio / (peak_ratio + 1)
-        noise = rand(small_peak)
+        noise = rand(small_peak) * 0.001
     else
         noise = rand(large_peak)
     end
@@ -360,7 +360,7 @@ function compute_correlation(E_input::Matrix, I_input::Matrix, num_pairs::Int=10
     return avg_correlation
 end
 
-function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-15:15, num_pairs::Int=50)
+function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-30:30, num_pairs::Int=50)
     # Ensure input matrices have the same dimensions
     if size(E_input) != size(I_input)
         error("E_input and I_input must have the same dimensions.")

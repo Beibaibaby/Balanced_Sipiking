@@ -488,7 +488,13 @@ function run_experiment(;
                         # Plot grey rectangles for event periods
                         for (start_time, end_time) in excursions_e
                             vspan!(p_event, [start_time, end_time], color=:grey, alpha=0.3,label=false)
+                            open(file_path_test, "w") do file
+                                write(file, "start time= $start_time\n")
+                                write(file, "end time = $end_time\n")
+                            end
                         end
+
+
 
                         # Add the excitatory and inhibitory rates to the plot
                         plot!(p_event, time_values, e_rate, label="Excitatory", lw=2, linecolor=:red, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
@@ -504,37 +510,64 @@ function run_experiment(;
                         savefig(p_event, fig_filename)
 
 
+
+
                         #########################ploting end###########################################
                         # Initialize arrays for event and nonevent segments
                         E_input_event = []
                         E_input_nonevent = []
 
-                        # Initialize the starting index for nonevent segments
+                        E_input_event_test = []
+                        E_input_nonevent_test = []
+                       
                         start_nonevent_index = 1
-
+                         
+                        index_test = 0 
                         # Loop through each excursion period
                         for (start_time, end_time) in excursions_e
-                            # Convert times to indices (assuming time_values is in sync with E_input)
-                            start_index = findfirst(≥(start_time), time_values)
-                            end_index = findfirst(≥(end_time), time_values)
+                            
+                            start_index = start_time*10
+                            end_index = min(end_time * 10, T * 10 - 1)
 
                             # Extract event segments
                             event_segment = E_input[:, start_index:end_index]
                             push!(E_input_event, event_segment)
 
+                            open(file_path_test, "w") do file
+                                write(file, "event start:= $start_index\n")
+                                write(file, "event end:= $end_index\n")
+                            end
+
                             # Extract nonevent segments
                             nonevent_segment = E_input[:, start_nonevent_index:start_index-1]
                             push!(E_input_nonevent, nonevent_segment)
 
+                            open(file_path_test, "w") do file
+                                write(file, "non_event start:= $start_nonevent_index\n")
+                                write(file, "non_event end:= $start_index\n")
+                            end
+
+                            if index_test == 0
+                                push!(E_input_event_test, event_segment)
+                                push!(E_input_nonevent_test, nonevent_segment)
+                            end
+
                             # Update the start index for the next nonevent segment
                             start_nonevent_index = end_index + 1
+                            index_test = index_test + 1
                         end
 
                         # Handle the final nonevent segment after the last excursion
                         final_nonevent_segment = E_input[:, start_nonevent_index:end]
                         push!(E_input_nonevent, final_nonevent_segment)
+                        
 
                         # Concatenate the segments
+            ##################just for testing########################
+                        #E_input_event = E_input_event_test
+                        #E_input_nonevent = E_input_nonevent_test
+           ########comment out when not testing##########################
+
                         E_input_event = hcat(E_input_event...)
                         E_input_nonevent = hcat(E_input_nonevent...)
 
@@ -542,37 +575,73 @@ function run_experiment(;
                         I_input_event = []
                         I_input_nonevent = []
 
+                        I_input_event_test = []
+                        I_input_nonevent_test = []
+
                         # Initialize the starting index for nonevent segments
                         start_nonevent_index = 1
+
+                        index_test_2 = 0
 
                         # Loop through each excursion period
                         for (start_time, end_time) in excursions_e
                             # Convert times to indices (assuming time_values is in sync with I_input)
-                            start_index = findfirst(≥(start_time), time_values)
-                            end_index = findfirst(≥(end_time), time_values)
+                            start_index = start_time*10
+                            end_index = min(end_time * 10, T * 10 - 1)
 
                             # Extract event segments
                             event_segment = I_input[:, start_index:end_index]
                             push!(I_input_event, event_segment)
 
+                            open(file_path_test, "w") do file
+                                write(file, "event start:= $start_index\n")
+                                write(file, "event end:= $end_index\n")
+                            end
+
                             # Extract nonevent segments
                             nonevent_segment = I_input[:, start_nonevent_index:start_index-1]
                             push!(I_input_nonevent, nonevent_segment)
 
+                            open(file_path_test, "w") do file
+                                write(file, "non_event start:= $start_nonevent_index\n")
+                                write(file, "non_event end:= $start_index\n")
+                            end
+
+                            if index_test_2 == 0
+                                push!(I_input_event_test, event_segment)
+                                push!(I_input_nonevent_test, nonevent_segment)
+                            end
+
                             # Update the start index for the next nonevent segment
                             start_nonevent_index = end_index + 1
+                            index_test_2=index_test_2+1
                         end
 
                         # Handle the final nonevent segment after the last excursion
                         final_nonevent_segment = I_input[:, start_nonevent_index:end]
                         push!(I_input_nonevent, final_nonevent_segment)
 
+            ##################just for testing########################
+                        #I_input_event = I_input_event_test
+                        #I_input_nonevent = I_input_nonevent_test
+           ########comment out when not testing##########################
+
                         # Concatenate the segments
                         I_input_event = hcat(I_input_event...)
                         I_input_nonevent = hcat(I_input_nonevent...)
                         
                         C_input = E_input .+ I_input
-                        
+
+                        event_length = size(E_input_event)
+                        nonevent_length = size(E_input_nonevent)
+                        overall_length = size(E_input)
+
+                        open(file_path_test, "w") do file
+                            write(file, "event_size = $event_length\n")
+                            write(file, "nonevent_size = $nonevent_length\n")
+                            write(file, "overall_size = $overall_length\n")
+                        end
+
                         avg_correlation_E_I=compute_correlation(E_input, I_input)
                         avg_correlation_E_E=compute_correlation(E_input, E_input)
                         avg_correlation_I_I=compute_correlation(I_input, I_input)

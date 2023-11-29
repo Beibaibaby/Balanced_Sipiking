@@ -10,12 +10,12 @@
 #SBATCH --output=/gpfs/data/doiron-lab/draco/trash_suites/b.%A_%b.out
 #SBATCH --error=/gpfs/data/doiron-lab/draco/trash_suites/b.%A_%b.err
 # Update array range based on total combinations
-#SBATCH --array=1-75%25
+#SBATCH --array=1-50%25
 
 export QT_QPA_PLATFORM='offscreen'
 
 # Define arrays of values
-stimstr_values=(1.0 5.0 10.0)
+stimstr_values=(1.0 5.0)
 f_ees=(0.0 0.25 0.5 0.85 1.0)
 f_ies=(0.0 0.25 0.5 0.85 1.0)
 
@@ -36,8 +36,8 @@ f_ee=${f_ees[$f_ee_index]}
 f_ie=${f_ies[$f_ie_index]}
 
 # Fixed parameters
-d_ee=0.24
-d_ie=0.24
+d_ee=0.01
+d_ie=0.01
 
 # Run the Julia script with the current parameters
 julia run_6.jl --T 1000 --d_ee $d_ee --f_ee $f_ee --d_ie $d_ie --f_ie $f_ie --stimstr $stimstr --corr_sign false --add_noise false

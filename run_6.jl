@@ -155,14 +155,17 @@ function run_experiment(;
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
         global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track, record_kick=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
             params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
             params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
             params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise,peak_ratio,large_peak_mean)
-        println("mean excitatory firing rate: ", mean(1000 * ns[1:params.Ne] / params.T), " Hz")
-        println("mean inhibitory firing rate: ", mean(1000 * ns[(params.Ne+1):Ncells] / params.T), " Hz")
+
+        overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
+        overall_mean_rate_I = mean(1000 * ns[(params.Ne+1):Ncells] / params.T)
+        println("mean excitatory firing rate: ", overall_mean_rate_E, " Hz")
+        println("mean inhibitory firing rate: ", overall_mean_rate_I, " Hz")
         
         product_weights_ee = weights_D_ee_track .* weights_F_ee_track
 
@@ -183,6 +186,16 @@ function run_experiment(;
                 # Parameters for sliding window
                 window_size = 25  # in ms
                 step_size = 5     # in ms
+
+                neighborhood_size = 3
+
+                times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
+
+                e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
+                i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
+
+
+
 
                 #print(Ne)
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
@@ -209,6 +222,18 @@ function run_experiment(;
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
+
+                    if low_plot # this parameter controls whether to focus on the zoom in low activity
+                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean", ylim=(0,5))
+                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
+                    else
+                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
+                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
+                    end
+                    
+
+
+
                 else
                     if low_plot ##this para control whether focus on the zoom in low activity
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
@@ -217,6 +242,18 @@ function run_experiment(;
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
+
+
+                    if low_plot # this parameter controls whether to focus on zooming in on low activity
+                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
+                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
+                    else
+                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
+                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
+                    end
+                    
+
+
                 end
                 
                 
@@ -248,6 +285,9 @@ function run_experiment(;
 
                 fig_filename = "$dir_name/plot_FR_$timestamp_str.png"
                 savefig(p2, fig_filename)
+
+                fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
+                savefig(p2, fig_filename_cons)
 
                 # Generate scaled x-values
                 x_values = 0:0.1:(length(product_weights_ee) - 1) * 0.1
@@ -769,7 +809,7 @@ function run_experiment(;
                 local EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
                 local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track, weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track
                 times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,
-                weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track=sim_dynamic(
+                weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track,record_kick=sim_dynamic(
                     params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
                     params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
                     params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,

@@ -162,7 +162,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     
     corr_pairs=100
     weights_copy = copy(weights)
-
+    record_kick = Int[]
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -201,8 +201,10 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
            large_variance = sigma_noise*0.01
            #peak_ratio = 2000
 
-           gaussian_noise_global=bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
-           
+           gaussian_noise_global, large_noise_flag = bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
+           if large_noise_flag
+            push!(record_kick, ti)
+           end
         end
 
         for ci = 1:Ncells
@@ -308,7 +310,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
        println("no over max")
     end
     
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick
 end
 
 function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
@@ -319,11 +321,13 @@ function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_pea
     # Determine which distribution to sample from
     if rand() < peak_ratio / (peak_ratio + 1)
         noise = rand(small_peak) * 0.001
+        large_noise_flag = false  # Flag for large noise not generated
     else
         noise = rand(large_peak)
+        large_noise_flag = true  # Flag for large noise generated
     end
 
-    return sqrt(c_noise) * scale_noise * noise * dt
+    return sqrt(c_noise) * scale_noise * noise * dt, large_noise_flag
 end
 
 
@@ -445,6 +449,28 @@ function compute_sliding_rate(spiketimes, window_size, step_size, T)
     return rates
 end
 
+function remove_spikes_near_kicks(times, record_kick, neighborhood_size)
+    # Deep copy to preserve the original times array
+    times_copy = deepcopy(times)
+
+    # Iterate over each kick time
+    for kick_time in record_kick
+        for neuron_index in 1:size(times, 1)
+            # Find indices of spikes to be removed
+            spikes_indices = findall(x -> abs(x - kick_time) <= neighborhood_size && x != 0, times[neuron_index, :])
+            
+            # Remove the identified spikes by setting them to zero
+            for index in spikes_indices
+                #if times[neuron_index, index] <= maxTimes
+                times_copy[neuron_index, index] = 0
+                #end
+            end
+        end
+    end
+
+    # Return the modified times array
+    return times_copy
+end
 
 
 

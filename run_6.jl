@@ -185,16 +185,38 @@ function run_experiment(;
 
                 # Parameters for sliding window
                 window_size = 25  # in ms
-                step_size = 5     # in ms
+                step_size = 20     # in ms
 
                 neighborhood_size = 3
 
                 times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
-
+                println("kick time is")
+                println(record_kick)
+                println("times")
+                println(times[1:50,:])
+                println("times motified")
+                println(times_modified[1:50,:])
+                
                 e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
+                
+                e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, 200,T)
+                i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, 200,T)
+                
+                println("events average for E")
+                println(e_rate_after_peak)
+                println("events average for I")
+                println(i_rate_after_peak)
+
+                @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
+                @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
 
 
+
+                plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
+                savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
 
 
                 #print(Ne)
@@ -287,7 +309,9 @@ function run_experiment(;
                 savefig(p2, fig_filename)
 
                 fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
-                savefig(p2, fig_filename_cons)
+                savefig(p2_cons, fig_filename_cons)
+
+
 
                 # Generate scaled x-values
                 x_values = 0:0.1:(length(product_weights_ee) - 1) * 0.1

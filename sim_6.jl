@@ -453,24 +453,33 @@ function remove_spikes_near_kicks(times, record_kick, neighborhood_size)
     # Deep copy to preserve the original times array
     times_copy = deepcopy(times)
 
-    # Iterate over each kick time
-    for kick_time in record_kick
-        for neuron_index in 1:size(times, 1)
+    # First loop: Iterate over each neuron and each kick time
+    for neuron_index in 1:size(times, 1)
+        for kick_time in record_kick
+            adjusted_kick_time = kick_time / 10
+
             # Find indices of spikes to be removed
-            spikes_indices = findall(x -> abs(x - kick_time) <= neighborhood_size && x != 0, times[neuron_index, :])
-            
-            # Remove the identified spikes by setting them to zero
+            spikes_indices = findall(x -> abs(x - adjusted_kick_time) <= neighborhood_size && x != 0, times[neuron_index, :])
+
+            # Set the identified spikes to zero
             for index in spikes_indices
-                #if times[neuron_index, index] <= maxTimes
                 times_copy[neuron_index, index] = 0
-                #end
             end
         end
+    end
+
+    # Second loop: Shift non-zero elements to the left for each neuron
+    for neuron_index in 1:size(times, 1)
+        non_zero_elements = filter(x -> x != 0, times_copy[neuron_index, :])
+        num_non_zero = length(non_zero_elements)
+        times_copy[neuron_index, 1:num_non_zero] = non_zero_elements
+        times_copy[neuron_index, (num_non_zero+1):end] .= 0
     end
 
     # Return the modified times array
     return times_copy
 end
+
 
 
 
@@ -568,3 +577,48 @@ function plot_curve(d_ee, f_ee, d_ie, f_ie, output_filename)
     plot!(p, temporal_frequencies, depression_ratios_fixed_F, label="E->I", marker=:circle, linewidth=2, linecolor=:deepskyblue2, markercolor=:deepskyblue2)
     savefig(p, output_filename)
 end
+
+function compute_average_activity_post_kick(times, record_kick, buffer_time,T)
+    # Sort kick times to handle them in order
+    sort!(record_kick)
+    n_neurons = size(times, 1)
+    # Create and merge intervals
+    intervals = []
+    current_interval = (record_kick[1], min(record_kick[1] + buffer_time*10, T*10))
+    for kick_time in record_kick[2:end]
+        if kick_time <= current_interval[2]
+            # Extend the current interval if there is an overlap
+            current_interval = (current_interval[1], min(kick_time + buffer_time*10, T*10))
+        else
+            # Save the current interval and start a new one
+            push!(intervals, current_interval)
+            current_interval = (kick_time, min(kick_time + buffer_time*10, T*10))
+        end
+    end
+    push!(intervals, current_interval)  # Add the last interval
+    println(intervals)
+
+    # Compute average activity for each interval
+    average_activities = []
+    for interval in intervals
+        total_spikes = 0
+        interval_duration = interval[2]/10 - interval[1]/10
+
+        n_spikes = sum([sum(((interval[1]/10) .<= times[j, :]) .& (times[j, :] .< (interval[2]/10))) for j=1:n_neurons])
+
+
+        #for neuron_index in 1:size(times, 1)
+            # Count spikes in the current interval
+        #    total_spikes += count(x -> (interval[1]/10) <= x <= (interval[2]/10), times[neuron_index, :])
+        #end
+        # Calculate the average activity
+        # Converting interval duration from ms to seconds for Hz calculation
+        average_activity = n_spikes / (n_neurons * interval_duration) * 1000
+        #(total_spikes / interval_duration) * 1000
+        push!(average_activities, average_activity)
+        print(average_activity)
+    end
+
+    return average_activities
+end
+

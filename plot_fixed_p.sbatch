@@ -4,7 +4,7 @@
 #SBATCH --partition=tier1q
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=12:30:30
+#SBATCH --time=06:30:30
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.out
@@ -25,10 +25,12 @@ event_thre=0.8
 mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
-julia run_6.jl --T 2000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 1 --peak_ratio 8000 --ie_sign false --ee_sign false 
+julia run_6.jl --T 3000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 300 --peak_ratio 10000 --ie_sign false --ee_sign false 
 
 # Create a file indicating the completion of this particular task
 
 main_dir="/gpfs/data/doiron-lab/draco/results_corr/exp_${ARRAY_JOB_ID}"
 
 julia plot_parallel.jl --main_dir "$main_dir" --event_thre $event_thre
+
+

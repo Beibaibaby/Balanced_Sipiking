@@ -185,9 +185,9 @@ function run_experiment(;
 
                 # Parameters for sliding window
                 window_size = 25  # in ms
-                step_size = 20     # in ms
+                step_size = 5     # in ms
 
-                neighborhood_size = 3
+                neighborhood_size = 2
 
                 times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
                 println("kick time is")
@@ -199,10 +199,17 @@ function run_experiment(;
                 
                 e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
+
                 
-                e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, 200,T)
-                i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, 200,T)
+                win_buff = 25
+                #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
+                #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
+
+                e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
+                i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
                 
+
+
                 println("events average for E")
                 println(e_rate_after_peak)
                 println("events average for I")

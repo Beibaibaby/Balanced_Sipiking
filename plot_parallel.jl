@@ -117,7 +117,7 @@ function load_and_merge_data(main_dir::String)
             # Check for the existence of cross_corr_E_E.jld2 in the subdirectory
             cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
             
-            cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
+            #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
             if isfile(cross_corr_file_path)
                 e_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
                 i_file_path = joinpath(sub_dir, "i_rate_after_peak.jld2")
@@ -126,6 +126,8 @@ function load_and_merge_data(main_dir::String)
                     e_data = load(e_file_path, "e_rate_after_peak")
                     i_data = load(i_file_path, "i_rate_after_peak")
                     
+                    print(sub_dir)
+                    println(e_data)
 
                     append!(e_rates_all, e_data)
                     append!(i_rates_all, i_data)
@@ -155,11 +157,11 @@ function plot_rates_with_stats(e_rates, i_rates, output_file)
     left_margin = 10mm  # Increase left margin to ensure y-axis labels are visible
     mean_marker_size = 10  # Adjust the size of the marker for the mean
 
-    p = scatter(ones(length(e_rates)), e_rates, label="E data", color=:pink, alpha=0.5, size=plot_size, left_margin=left_margin)
+    p = scatter(ones(length(e_rates)), e_rates, label="E data", color=:pink, alpha=0.5, size=plot_size, left_margin=left_margin,xlim=(0,2.8))
     scatter!(p, 2*ones(length(i_rates)), i_rates, label="I data", color=:lightblue, alpha=0.5)
 
     # Overlay the mean markers
-    scatter!(p, [1], [e_mean], yerr=e_std, label="E mean", color=:red, markershape=:cross, markersize=mean_marker_size)
+    scatter!(p, [0.25], [e_mean], yerr=e_std, label="E mean", color=:red, markershape=:cross, markersize=mean_marker_size)
     scatter!(p, [2], [i_mean], yerr=i_std, label="I mean", color=:blue, markershape=:cross, markersize=mean_marker_size)
     
     xticks!(p, [1, 2], ["E", "I"])
@@ -190,20 +192,32 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
         if isdir(sub_dir)
             file_path = joinpath(sub_dir, file_name)
             if isfile(file_path)
+                cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
+                
+                #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
+            
+            #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
+            if isfile(cross_corr_file_path)
                 raw_activity_data = load(file_path)
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
                 
                 # Filter the activities in raw_activity, discard if length > max_length
-                filtered_activity = filter(a -> 83 <= length(a) <= max_length, raw_activity)
+                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
 
                 for activity in filtered_activity
+                    println(sub_dir)
+                    #println(mean(activity))
+                    print("1")
                     #println(activity)
-                    println(length(total_activity))
-                    println(length(activity))
+                    #println(length(total_activity))
+                    #println(length(activity))
                     # Resize arrays if necessary and initialize new elements
                     if length(total_activity) < length(activity)
-                        
+                        println("!!!!")
+                        print(length(total_activity))
+                        print(length(activity))
+
                         resize!(total_activity, length(activity))
                         
                         total_activity[(end - length(activity) + 1):end] .= 0.0
@@ -218,6 +232,7 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                     end
                     count += 1
                 end
+            end
             end
         end
     end
@@ -273,5 +288,6 @@ avg_i_rate_raw_after_peak, std_i_rate_raw_after_peak = average_raw_activity_and_
 # Plotting and saving the plot
 plot_file = joinpath(main_dir, "average_raw_activity_plot.png")
 plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, std_e_rate_raw_after_peak, avg_i_rate_raw_after_peak, std_i_rate_raw_after_peak, plot_file)
-
+#zzz=zeros(size(std_i_rate_raw_after_peak))
+#plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, zzz, avg_i_rate_raw_after_peak, zzz, plot_file)
 

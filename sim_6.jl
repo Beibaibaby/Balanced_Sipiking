@@ -656,7 +656,39 @@ function compute_average_activity_post_kick_2(rate_cons, record_kick, buffer_tim
     return average_activities
 end
 
-# Usage
+
+function collect_raw_activity_clips(rate_cons, record_kick, buffer_before, buffer_after, step_size, T)
+    sort!(record_kick)
+
+    # Convert kick times to indices in the rate arrays
+    kick_indices = [round(Int, (kick_time / 10 + 30) / step_size) for kick_time in record_kick]
+    buffer_before_steps = round(Int, buffer_before / step_size)
+    buffer_after_steps = round(Int, buffer_after / step_size)
+
+    # Create and merge intervals
+    clips = []
+    current_clip = (max(1, kick_indices[1] - buffer_before_steps), min(kick_indices[1] + buffer_after_steps, round(Int, T / step_size)))
+    for kick_index in kick_indices[2:end]
+        if kick_index - buffer_before_steps <= current_clip[2]
+            # Extend the current interval if there is an overlap
+            current_clip = (current_clip[1], min(kick_index + buffer_after_steps, round(Int, T / step_size)))
+        else
+            # Save the current interval and start a new one
+            clip = rate_cons[current_clip[1]:min(current_clip[2], length(rate_cons))]
+            push!(clips, clip)
+            current_clip = (max(1, kick_index - buffer_before_steps), min(kick_index + buffer_after_steps, round(Int, T / step_size)))
+        end
+    end
+    # Add the last interval
+    clip = rate_cons[current_clip[1]:min(current_clip[2], length(rate_cons))]
+    push!(clips, clip)
+
+    return clips
+end
+
+
+
+
 
 
 

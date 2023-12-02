@@ -116,6 +116,8 @@ function load_and_merge_data(main_dir::String)
         if isdir(sub_dir)
             # Check for the existence of cross_corr_E_E.jld2 in the subdirectory
             cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
+            
+            cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
             if isfile(cross_corr_file_path)
                 e_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
                 i_file_path = joinpath(sub_dir, "i_rate_after_peak.jld2")
@@ -123,11 +125,11 @@ function load_and_merge_data(main_dir::String)
                 if isfile(e_file_path) && isfile(i_file_path)
                     e_data = load(e_file_path, "e_rate_after_peak")
                     i_data = load(i_file_path, "i_rate_after_peak")
+                    
 
                     append!(e_rates_all, e_data)
                     append!(i_rates_all, i_data)
-                    println("Processing subdirectory: ", sub_dir)
-                    println("E data: ", e_data)
+                    
                 end
             end
         end
@@ -169,3 +171,107 @@ end
 
 
 plot_rates_with_stats(e_rates_merged, i_rates_merged, joinpath(main_dir, "rates_plot.png"))
+
+
+
+file_e = "e_rate_raw_after_peak.jld2"
+file_i = "i_rate_raw_after_peak.jld2"
+max_trial_length = 85 # Define buffer_before and win_buff as needed
+time_step = 5 # Define your time step size in ms
+
+# ... [previous parts of the script] ...
+
+function average_raw_activity_and_std(main_dir::String, file_name::String, max_length::Int64)
+    total_activity = Vector{Float64}()
+    squared_activity = Vector{Float64}()
+    count = 0
+
+    for sub_dir in readdir(main_dir, join=true)
+        if isdir(sub_dir)
+            file_path = joinpath(sub_dir, file_name)
+            if isfile(file_path)
+                raw_activity_data = load(file_path)
+                key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
+                raw_activity = raw_activity_data[key]
+                
+                # Filter the activities in raw_activity, discard if length > max_length
+                filtered_activity = filter(a -> 83 <= length(a) <= max_length, raw_activity)
+
+                for activity in filtered_activity
+                    #println(activity)
+                    println(length(total_activity))
+                    println(length(activity))
+                    # Resize arrays if necessary and initialize new elements
+                    if length(total_activity) < length(activity)
+                        
+                        resize!(total_activity, length(activity))
+                        
+                        total_activity[(end - length(activity) + 1):end] .= 0.0
+                        resize!(squared_activity, length(activity))
+                        squared_activity[(end - length(activity) + 1):end] .= 0.0
+                    end
+
+                    # Sum up activities and squared activities
+                    for i in 1:length(activity)
+                        total_activity[i] += activity[i]
+                        squared_activity[i] += activity[i]^2
+                    end
+                    count += 1
+                end
+            end
+        end
+    end
+
+    # Calculate mean and standard deviation
+    mean_activity = count > 0 ? total_activity ./ count : total_activity
+    variance_activity = count > 0 ? (squared_activity ./ count) .- mean_activity.^2 : squared_activity
+    std_activity = sqrt.(variance_activity)
+
+    return mean_activity, std_activity
+end
+
+
+# ... [rest of the script] ...
+
+
+
+# Function to plot average raw activities with error ribbons
+function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, avg_i_activity, std_i_activity, output_file::String)
+    time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
+    
+    left_margin = 20mm
+    p = plot(size=(800, 400),left_margin=left_margin)
+
+    ribbon_alpha = 0.1
+    # Plot E rates with error ribbon
+    plot!(p, time_axis, avg_e_activity, ribbon = std_e_activity, label="E Rates", color=:red, fillalpha=ribbon_alpha)
+
+    # Plot I rates with error ribbon
+    plot!(p, time_axis, avg_i_activity, ribbon = std_i_activity, label="I Rates", color=:blue, fillalpha=ribbon_alpha)
+
+    xlabel!(p, "Time (ms)")
+    ylabel!(p, "Average Rate")
+    title!(p, "Average Neural Activity Over Time")
+
+    savefig(p, output_file)
+end
+
+# Main script execution
+
+
+
+# Average raw activities and compute standard deviations
+avg_e_rate_raw_after_peak, std_e_rate_raw_after_peak = average_raw_activity_and_std(main_dir, file_e, max_trial_length)
+avg_i_rate_raw_after_peak, std_i_rate_raw_after_peak = average_raw_activity_and_std(main_dir, file_i, max_trial_length)
+
+# Save the averaged raw activities
+@save joinpath(main_dir, "avg_e_rate_raw_after_peak.jld2") avg_e_rate_raw_after_peak
+@save joinpath(main_dir, "std_e_rate_raw_after_peak.jld2") std_e_rate_raw_after_peak
+@save joinpath(main_dir, "avg_i_rate_raw_after_peak.jld2") avg_i_rate_raw_after_peak
+@save joinpath(main_dir, "std_i_rate_raw_after_peak.jld2") std_i_rate_raw_after_peak
+
+# Plotting and saving the plot
+plot_file = joinpath(main_dir, "average_raw_activity_plot.png")
+plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, std_e_rate_raw_after_peak, avg_i_rate_raw_after_peak, std_i_rate_raw_after_peak, plot_file)
+
+

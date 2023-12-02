@@ -11,3 +11,4 @@ using Pkg
 #Pkg.update()
 #Pkg.build("GR")
 #Pkg.add("FilePathsBase")
+Pkg.add("FileIO")

@@ -201,14 +201,16 @@ function run_experiment(;
                 i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
                 
-                win_buff = 25
+                win_buff = 400
+                buffer_before=10
                 #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
                 #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
 
                 e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
                 i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
                 
-
+                e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
+                i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
 
                 println("events average for E")
                 println(e_rate_after_peak)
@@ -217,6 +219,8 @@ function run_experiment(;
 
                 @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
                 @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
+                @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
+                @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
 
 
 

@@ -304,7 +304,7 @@ plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, std_e_rate_raw_after
 
 
 
-function compute_and_plot_psd(main_dir::String, file_name::String, max_length::Int64, output_file::String)
+function compute_and_plot_psd(main_dir::String, file_name::String, max_length::Int64, output_file::String, output_file_2::String)
     all_psds = []  # To store the PSD of each trial
     count = 0
 
@@ -327,7 +327,12 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)
                     psd = periodogram(activity,fs=200)
-                    push!(all_psds, psd)
+                    #print(psd)
+                    
+
+                    psd_power_db = 10*log10.(psd.power[1:20])
+                    psd_power_db_normalized = (psd_power_db .- minimum(psd_power_db)) ./ (maximum(psd_power_db) - minimum(psd_power_db))
+                    push!(all_psds, (freq=psd.freq[1:20], power_db=psd_power_db_normalized))
                     count += 1
                 end
             end
@@ -336,29 +341,58 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
     end
 
     # Plotting the PSDs
-    p = plot(size=(800, 600), xlabel="Frequency (Hz)", ylabel="Power (dB)", title="Power Spectral Density")
+    # Plotting the normalized PSDs
+    p = plot(size=(800, 600), xlabel="Frequency (Hz)", ylabel="Normalized Power (0-1)", title="Normalized Power Spectral Density")
     for psd in all_psds
-        plot!(p, psd.freq, 10*log10.(psd.power), label="Trial $count", legend=false)
+        plot!(p, psd.freq, psd.power_db, label="Trial $count", legend=false)
     end
     savefig(p, output_file)
+
+
+    num_freqs = length(first(all_psds).freq)
+    mean_psd = zeros(num_freqs)
+    std_psd = zeros(num_freqs)
+
+    for i in 1:num_freqs
+        freq_psds = [psd.power_db[i] for psd in all_psds]
+        mean_psd[i] = mean(freq_psds)
+        std_psd[i] = std(freq_psds)
+    end
+
+    # Plotting the mean PSD with standard deviation as a ribbon
+    p2 = plot(size=(800, 600), xlabel="Frequency (Hz)", ylabel="Mean Normalized Power (0-1)", title="Mean Normalized Power Spectral Density with STD",fillalpha=0.2,color="red")
+    plot!(p2, first(all_psds).freq, mean_psd, ribbon=std_psd, label="Mean PSD", legend=false)
+    savefig(p2, output_file_2)
+
+
 end
 
 
-compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png")) 
-compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"))
+#compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png")) 
+#compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"))
 
+compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png"),joinpath(main_dir, "power_spectra_e_mean.png")) 
+compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"),joinpath(main_dir, "power_spectra_i_mean.png"))
 
 function convert_to_2d_matrix(sorted_psd_matrix)
-    # Check if the list is empty
     if isempty(sorted_psd_matrix)
         return Matrix{Float64}(undef, 0, 0)  # Return an empty matrix if the input is empty
     end
 
-    # Stack the arrays vertically to form a 2D matrix
-    psd_2d_matrix = vcat(sorted_psd_matrix...)
+    # Determine the length of individual PSD vectors
+    psd_length = length(first(sorted_psd_matrix))
+
+    # Initialize a matrix to store the concatenated PSD data
+    psd_2d_matrix = Matrix{Float64}(undef, length(sorted_psd_matrix), psd_length)
+
+    for (i, psd_vector) in enumerate(sorted_psd_matrix)
+        psd_2d_matrix[i, :] = psd_vector
+    end
 
     return psd_2d_matrix
 end
+
+
 
 function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, output_file::String, fs::Float64)
     psd_matrix = []  # To store the PSD (in dB) of each trial
@@ -384,21 +418,31 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
                     # Calculate Power Spectral Density (PSD)
                     #println(activity)
                     psd = periodogram(activity, fs=200)
-                    psd_db = 10 * log10.(psd.power)
-                    push!(psd_matrix, psd_db)
+                    #psd_db = 10 * log10.(psd.power)
+                    #push!(psd_matrix, psd_db)
+                    
+                    psd_power_db = 10*log10.(psd.power[1:20])
+                    psd_power_db_normalized = (psd_power_db .- minimum(psd_power_db)) ./ (maximum(psd_power_db) - minimum(psd_power_db))
+                    push!(psd_matrix, psd_power_db_normalized)
+
+
 
                     # Calculate total energy (sum of PSD values)
-                    total_energy = sum(psd_db)
+                    total_energy = sum(psd_power_db)
                     push!(total_energy_per_trial, total_energy)
                 end
+             end
+
             end
-            end
+
         end
     end
 
     # Sort trials by total energy (higher energy at the bottom)
     sorted_indices = sortperm(total_energy_per_trial, rev=true)
     sorted_psd_matrix = psd_matrix[sorted_indices]
+    #println(size(sorted_psd_matrix))
+    #println(sorted_psd_matrix)
     psd_2d_matrix = convert_to_2d_matrix(sorted_psd_matrix)
     
     # Create the heatmap

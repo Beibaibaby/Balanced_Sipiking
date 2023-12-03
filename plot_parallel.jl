@@ -4,6 +4,7 @@ using Plots
 include("sim_6.jl") 
 using JLD2
 using Measures
+using DSP 
 
 function average_correlations(main_dir::String, file_name::String)
     total_corr = Dict()
@@ -126,8 +127,8 @@ function load_and_merge_data(main_dir::String)
                     e_data = load(e_file_path, "e_rate_after_peak")
                     i_data = load(i_file_path, "i_rate_after_peak")
                     
-                    print(sub_dir)
-                    println(e_data)
+                    #print(sub_dir)
+                    #println(e_data)
 
                     append!(e_rates_all, e_data)
                     append!(i_rates_all, i_data)
@@ -148,21 +149,31 @@ e_rates_merged, i_rates_merged = load_and_merge_data(main_dir)
 @save joinpath(main_dir, "merged_i_rates.jld2") i_rates_merged
 
 function plot_rates_with_stats(e_rates, i_rates, output_file)
-    e_mean = mean(e_rates)
-    e_std = std(e_rates)
-    i_mean = mean(i_rates)
-    i_std = std(i_rates)
-
+    e_rates_filtered = filter!(x -> !isnan(x), e_rates)
+    i_rates_filtered = filter!(x -> !isnan(x), i_rates)
+    
+    e_mean = mean(e_rates_filtered)
+    i_mean = mean(i_rates_filtered)
+    
+    e_std = std(e_rates_filtered)
+    i_std = std(i_rates_filtered)
+    
+    
     plot_size = (600, 400)  # Adjust the size as needed
     left_margin = 10mm  # Increase left margin to ensure y-axis labels are visible
-    mean_marker_size = 10  # Adjust the size of the marker for the mean
+    mean_marker_size = 12  # Increase the size of the marker for the mean
+    errorbar_width = 2  # Increase error bar width for better visibility
 
-    p = scatter(ones(length(e_rates)), e_rates, label="E data", color=:pink, alpha=0.5, size=plot_size, left_margin=left_margin,xlim=(0,2.8))
+    p = scatter(ones(length(e_rates)), e_rates, label="E data", color=:pink, alpha=0.5, size=plot_size, left_margin=left_margin, xlim=(0.5,2.5))
     scatter!(p, 2*ones(length(i_rates)), i_rates, label="I data", color=:lightblue, alpha=0.5)
-
+    #println("E Rates Mean is")
+    #print(skipmissing(e_rates))
+    #println(e_mean)
+    #println("I Rates Mean is")
+    # print(i_mean)
     # Overlay the mean markers
-    scatter!(p, [0.25], [e_mean], yerr=e_std, label="E mean", color=:red, markershape=:cross, markersize=mean_marker_size)
-    scatter!(p, [2], [i_mean], yerr=i_std, label="I mean", color=:blue, markershape=:cross, markersize=mean_marker_size)
+    scatter!(p, [1], [e_mean], yerr=e_std, label="E mean", color=:red, markershape=:cross, markersize=mean_marker_size, markeralpha=1, linealpha=1, linewidth=errorbar_width)
+    scatter!(p, [2], [i_mean], yerr=i_std, label="I mean", color=:blue, markershape=:cross, markersize=mean_marker_size, markeralpha=1, linealpha=1, linewidth=errorbar_width)
     
     xticks!(p, [1, 2], ["E", "I"])
     ylabel!(p, "Rate")
@@ -206,9 +217,9 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                 filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
 
                 for activity in filtered_activity
-                    println(sub_dir)
+                    #println(sub_dir)
                     #println(mean(activity))
-                    print("1")
+                    #print("1")
                     #println(activity)
                     #println(length(total_activity))
                     #println(length(activity))
@@ -291,3 +302,110 @@ plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, std_e_rate_raw_after
 #zzz=zeros(size(std_i_rate_raw_after_peak))
 #plot_avg_raw_activity(time_step, avg_e_rate_raw_after_peak, zzz, avg_i_rate_raw_after_peak, zzz, plot_file)
 
+
+
+function compute_and_plot_psd(main_dir::String, file_name::String, max_length::Int64, output_file::String)
+    all_psds = []  # To store the PSD of each trial
+    count = 0
+
+    for sub_dir in readdir(main_dir, join=true)
+        if isdir(sub_dir)
+            file_path = joinpath(sub_dir, file_name)
+            if isfile(file_path)
+                cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
+                
+                #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
+            
+            #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
+            if isfile(cross_corr_file_path)
+                raw_activity_data = load(file_path)
+                key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
+                raw_activity = raw_activity_data[key]
+                
+                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
+
+                for activity in filtered_activity
+                    # Calculate Power Spectral Density (PSD)
+                    psd = periodogram(activity,fs=200)
+                    push!(all_psds, psd)
+                    count += 1
+                end
+            end
+            end
+        end
+    end
+
+    # Plotting the PSDs
+    p = plot(size=(800, 600), xlabel="Frequency (Hz)", ylabel="Power (dB)", title="Power Spectral Density")
+    for psd in all_psds
+        plot!(p, psd.freq, 10*log10.(psd.power), label="Trial $count", legend=false)
+    end
+    savefig(p, output_file)
+end
+
+
+compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png")) 
+compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"))
+
+
+function convert_to_2d_matrix(sorted_psd_matrix)
+    # Check if the list is empty
+    if isempty(sorted_psd_matrix)
+        return Matrix{Float64}(undef, 0, 0)  # Return an empty matrix if the input is empty
+    end
+
+    # Stack the arrays vertically to form a 2D matrix
+    psd_2d_matrix = vcat(sorted_psd_matrix...)
+
+    return psd_2d_matrix
+end
+
+function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, output_file::String, fs::Float64)
+    psd_matrix = []  # To store the PSD (in dB) of each trial
+    total_energy_per_trial = []  # To store the total energy of each trial for sorting
+
+    for sub_dir in readdir(main_dir, join=true)
+        if isdir(sub_dir)
+            file_path = joinpath(sub_dir, file_name)
+            if isfile(file_path)
+                cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
+                
+                #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
+            
+            #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
+            if isfile(cross_corr_file_path)
+                raw_activity_data = load(file_path)
+                key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
+                raw_activity = raw_activity_data[key]
+
+                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
+                
+                for activity in filtered_activity
+                    # Calculate Power Spectral Density (PSD)
+                    #println(activity)
+                    psd = periodogram(activity, fs=200)
+                    psd_db = 10 * log10.(psd.power)
+                    push!(psd_matrix, psd_db)
+
+                    # Calculate total energy (sum of PSD values)
+                    total_energy = sum(psd_db)
+                    push!(total_energy_per_trial, total_energy)
+                end
+            end
+            end
+        end
+    end
+
+    # Sort trials by total energy (higher energy at the bottom)
+    sorted_indices = sortperm(total_energy_per_trial, rev=true)
+    sorted_psd_matrix = psd_matrix[sorted_indices]
+    psd_2d_matrix = convert_to_2d_matrix(sorted_psd_matrix)
+    
+    # Create the heatmap
+    p = heatmap(psd_2d_matrix, color=:viridis, xlabel="Frequency (Hz)", ylabel="Trials", title="PSD Heatmap")
+    savefig(p, output_file)
+end
+
+
+compute_and_plot_psd_heatmap(main_dir, file_e,joinpath(main_dir, "power_spectra_heat_e.png"),200.0) 
+compute_and_plot_psd_heatmap(main_dir, file_i,joinpath(main_dir, "power_spectra_heat_i.png"),200.0)

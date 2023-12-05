@@ -11,7 +11,7 @@ function plot_rates_with_stats(e_rates, i_rates, labels, output_file)
     i_means = [mean(rates) for rates in i_rates_filtered]
     i_stds = [std(rates) for rates in i_rates_filtered]
 
-    plot_size = (800, 400)
+    plot_size = (1000, 450)
     left_margin = 10mm
     mean_marker_size = 10
 
@@ -42,7 +42,7 @@ exp_paths = ["/gpfs/data/doiron-lab/draco/results_corr/exp_3417121",
              "/gpfs/data/doiron-lab/draco/results_corr/exp_3417309",
              "/gpfs/data/doiron-lab/draco/results_corr/exp_3417363"]
 
-labels = ["Hypnotized", "No Facilitation", "No Plasticity"]
+labels = ["Hypothesized", "No Facilitation", "No Plasticity"]
 
 e_rates_all = []
 i_rates_all = []

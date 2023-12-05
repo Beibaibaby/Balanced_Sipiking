@@ -446,6 +446,7 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
     psd_2d_matrix = convert_to_2d_matrix(sorted_psd_matrix)
     
     # Create the heatmap
+    # Is there a way to change the x axis?
     p = heatmap(psd_2d_matrix, color=:viridis, xlabel="Frequency (Hz)", ylabel="Trials", title="PSD Heatmap")
     savefig(p, output_file)
 end

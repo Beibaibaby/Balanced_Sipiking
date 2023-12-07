@@ -4,7 +4,7 @@
 #SBATCH --partition=tier1q
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=08:30:30
+#SBATCH --time=02:30:30
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/trash/a1.%A_%a.out
@@ -25,7 +25,8 @@ event_thre=0.8
 mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
-julia run_6.jl --T 3000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 300 --peak_ratio 12000 --f_ee 0.3 --d_ee 0.6 --f_ee 0.025 --corr_sign false
+julia run_6.jl --T 3000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 300 --peak_ratio 12000 
+#--f_ee 0.3 --d_ee 0.6 --f_ee 0.025 --corr_sign false
 #--corr_sign false
 
 #--f_ee 0.0 --f_ie 0.0 --d_ee 1.0 --d_ie 1.0 --f_ee 0.0

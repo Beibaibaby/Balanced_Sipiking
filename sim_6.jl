@@ -253,8 +253,12 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             
                gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
            
+               if (ci < Ne)
+                   synInput += gaussian_noise_global + gaussian_noise_local
+               else
+                    synInput +=  gaussian_noise_local
+               end
 
-               synInput += gaussian_noise_global + gaussian_noise_local
             end
            
             if t > (lastSpike[ci] + refrac)

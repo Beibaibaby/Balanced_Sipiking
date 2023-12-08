@@ -259,7 +259,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
                #     synInput +=  gaussian_noise_local
                #end
 
-               synInput += gaussian_noise_global + gaussian_noise_local
+               synInput += gaussian_noise_global #+ gaussian_noise_local
 
             end
            
@@ -328,7 +328,7 @@ function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_pea
     if rand() < peak_ratio / (peak_ratio + 1)
         noise = rand(small_peak) * 0.001
         large_noise_flag = false  # Flag for large noise not generated
-        #noise = 0
+        noise = 0
     else
         noise = rand(large_peak)
         large_noise_flag = true  # Flag for large noise generated

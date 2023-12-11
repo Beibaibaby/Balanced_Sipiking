@@ -144,11 +144,10 @@ end
 
 # Example usage
 A = 20.0         # fixed parameter A
-d = 0.15         # depression fraction upon a spike (default setting)
-f = 0.92         # facilitation increment upon a spike (default setting)
+d = 0.24        # depression fraction upon a spike (default setting)
 f_ie = 0.0      # Adding facilitation into E->I (but samll)
 d = 0.24
-f = 0.0
+f = 0.85
 
 tau_d = 103.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
@@ -175,7 +174,7 @@ depression_ratio = Hs[2] / Hs[1]
 using Plots
 
 # Example temporal_frequencies
-temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25,30,40,50,60,75,80,100,110,130, 150]
+temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, 25,30,35,40,45,50,60,70,80]
 #temporal_frequencies = [2,3,4,5,6,7,8,9,10,11,12, 13, 15, 20, 25, 30,35, 40]
 # Initialize an empty array to store results
 depression_ratios = []
@@ -216,8 +215,11 @@ end
 
 # Plot results
 using Plots
-plot(temporal_frequencies, depression_ratios, xlabel="Temporal Frequency (Hz)", title = "d=$d f=$f", ylabel="Depression Ratio", label="E->E", marker=:circle, markercolor=:orange,linewidth=2, linecolor=:orange)
-plot!(temporal_frequencies, depression_ratios_fixed_F, label="E->I", marker=:circle, linewidth=2, linecolor=:purple,markercolor=:purple)
+plot(temporal_frequencies, depression_ratios, xlabel="Pulse frequency (Hz)", title = "d=$d f=$f", ylabel="Depression Ratio (H5/H1)", label="E → E", marker=:circle, markercolor=:orange, linecolor=:orange, markersize=2, linewidth=5,grid=false,ylim=(0,1.05),size=(450,400),dpi=300)
+plot!(temporal_frequencies, depression_ratios_fixed_F, label="E → I", marker=:circle, markersize=2, linewidth=5, linecolor=:mediumpurple3,markercolor=:slateblue3)
+
+vline!([15, 60], linestyle=:dot, linecolor=:grey, linewidth=2,label=["" ""])
 
 # Save figure
-#savefig("depression_ratio_vs_temporal_frequency_compare.png")
+savefig("camp_dashed.png")
+#savefig("depression_ratio_vs_temporal_frequency_compare.eps")

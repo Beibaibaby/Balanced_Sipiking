@@ -1,5 +1,5 @@
 using Plots
-
+using Measures
 function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
     τ_m = 10.0       
     V_thresh = -50.0  
@@ -56,17 +56,18 @@ end
 
 
 function plot_LIF_simulation(time, Vs, spike_times, S_input, Ds, Fs, filename)
-    p1 = plot(time, Vs, lw=2, label="Membrane Potential", xlabel="Time (ms)", ylabel="Membrane Potential (mV)", ylims=(-80, -40), legend=:topright, legendfontsize=8, title="LIF Neuron Spiking Activity", linecolor=:blue)
-    scatter!(spike_times, fill(-50, length(spike_times)), markershape=:circle, color="red", label="Spikes", ms=4)
+    p1 = plot(time[1:200], Vs[1:200], lw=2, label="Membrane Potential", ylabel="Membrane Potential (mV)", ylims=(-80, -50), legend=:topright, legendfontsize=8, linecolor=:orange,grid=false,dpi=400,left_margin=15mm,linewidth=10)
+    #scatter!(spike_times, fill(-50, length(spike_times)), markershape=:circle, color="red", label="Spikes", ms=4)#mediumpurple3
     
-    p2 = plot(time, S_input, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
-    title!("Input Spike Train")
+    #p2 = plot(time, S_input, label="Spike Train", xlabel="Time (ms)", ylabel="Amplitude", color="purple", legend=:topright, ylims=(-0.1, 1.1), legendfontsize=8, linewidth=2)
+    #title!("Input Spike Train")
 
-    p3 = plot(time, Ds, lw=2, label="Depression Factor D", xlabel="Time (ms)", ylabel="Value", color=:green, legend=:topright, legendfontsize=8, linewidth=2)
-    plot!(p3, time, Fs, lw=2, label="Facilitation Factor F", color=:orange, legend=:topright, legendfontsize=8, linewidth=2)
-    title!("D and F Over Time")
+    p3 = plot(time[1:200], Ds[1:200], lw=2, label="Depression Factor D", xlabel="Time (ms)", ylabel="Value", color=:black, legend=:topright, legendfontsize=8, linewidth=10,grid=false,dpi=400,left_margin=15mm,ylim=(0,5))
+    plot!(p3, time[1:200], Fs[1:200], lw=2, label="Facilitation Factor F", color=:darkgreen, legend=:topright, legendfontsize=8, linewidth=10)
+    #plot!(p3, time, Fs .* Ds, lw=2, label="F times D", color=:black, legend=:topright, legendfontsize=8, linewidth=2)
+    #title!("D and F Over Time")
 
-    p = plot(p1, p2, p3, layout=(3,1), link=:x, size=(800, 800))  # Adjusted the layout and size
+    p = plot(p1, p3, layout=(2,1), link=:x, size=(1000, 550),dpi=400)  # Adjusted the layout and size
 
     savefig(p, filename)
 end
@@ -104,8 +105,8 @@ end
 
 # Example usage
 A = 20.0        # fixed parameter A
-d = 0.15       # depression fraction upon a spike
-f = 0.92         # facilitation increment upon a spike
+d = 0.24       # depression fraction upon a spike
+f = 0.85         # facilitation increment upon a spike
 tau_d = 103.0     # time constant for D to recover to 1 (ms)
 tau_f = 96.0     # time constant for F to recover to 1 (ms)
 dt = 1.0        # time step (ms)
@@ -113,7 +114,7 @@ T = 1000.0       # total time to simulate (ms)
 
 # Generate spike train
 first_spike_time = 50.0  # ms
-temporal_frequency = 5.0  # Hz
+temporal_frequency = 60.0  # Hz
 S_input = generate_spike_train(T, dt, first_spike_time, temporal_frequency)
 
 # Run simulation
@@ -125,5 +126,5 @@ println("Depression ratio H_5/H_1: ", depression_ratio)
 
 
 # Plot results and save to file
-output_filename = "./figs/tf=5.png"
+output_filename = "./tf=60_F.png"
 plot_LIF_simulation(time, Vs, spike_times, S_input, Ds, Fs, output_filename)  # Added Ds and Fs

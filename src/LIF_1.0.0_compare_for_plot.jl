@@ -218,8 +218,9 @@ using Plots
 plot(temporal_frequencies, depression_ratios, xlabel="Pulse frequency (Hz)", title = "d=$d f=$f", ylabel="Depression Ratio (H5/H1)", label="E → E", marker=:circle, markercolor=:orange, linecolor=:orange, markersize=2, linewidth=5,grid=false,ylim=(0,1.05),size=(450,400),dpi=300)
 plot!(temporal_frequencies, depression_ratios_fixed_F, label="E → I", marker=:circle, markersize=2, linewidth=5, linecolor=:mediumpurple3,markercolor=:slateblue3)
 
-vline!([15, 60], linestyle=:dot, linecolor=:grey, linewidth=2,label=["" ""])
+#vline!([15, 60], linestyle=:dot, linecolor=:grey, linewidth=2,label=["" ""])
+hline!([0.6], linestyle=:dot, linecolor=:brown, linewidth=2,label=["" ""])
 
 # Save figure
-savefig("camp_dashed.png")
+savefig("camp_hdashed.png")
 #savefig("depression_ratio_vs_temporal_frequency_compare.eps")

@@ -1,5 +1,6 @@
 using Plots
 using Measures
+
 function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
     τ_m = 10.0       
     V_thresh = -50.0  
@@ -53,6 +54,7 @@ function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
     
     return time, Vs, spike_times, Hs, Ds, Fs  # Added Ds and Fs to the return values
 end
+
 
 
 function plot_LIF_simulation(time, Vs, spike_times, S_input, Ds, Fs, filename)

@@ -217,8 +217,12 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             #synInput = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             synInput_E = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise)
             synInput_I = (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
-            E_input[ci, ti] = synInput_E
-            I_input[ci, ti] = synInput_I 
+            E_input[ci, ti] = synInput_E #* 0.1
+            I_input[ci, ti] = synInput_I #* 0.1
+            ###Testing 
+            #E_input[ci, ti] = forwardInputsEPrev[ci]
+            #I_input[ci, ti] = forwardInputsIPrev[ci]
+
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             
             if corr_flag == true
@@ -252,14 +256,21 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
             
                gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
-           
+               #gaussian_noise_local = sqrt(1-c_noise) * rand(Normal(0, 1)) * sigma_noise * dt
+               #gaussian_noise_local = sqrt(1-c_noise) * 0 * (1 - 2 * rand()) * sigma_noise * dt
+               # try a stronger local noise
+
                #if (ci < Ne)
                #    synInput += gaussian_noise_global + gaussian_noise_local
                #else
                #     synInput +=  gaussian_noise_local
                #end
-
-               synInput += gaussian_noise_global + gaussian_noise_local
+               if rand() < 0.3
+                    synInput += gaussian_noise_global + gaussian_noise_local
+               else
+                    synInput += gaussian_noise_local
+               end
+               
 
             end
            
@@ -371,7 +382,7 @@ function compute_correlation(E_input::Matrix, I_input::Matrix, num_pairs::Int=10
     return avg_correlation
 end
 
-function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-30:30, num_pairs::Int=50)
+function compute_cross_correlation_old(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-30:30, num_pairs::Int=50)
     # Ensure input matrices have the same dimensions
     if size(E_input) != size(I_input)
         error("E_input and I_input must have the same dimensions.")
@@ -403,6 +414,58 @@ function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::
                 
                 e_data = E_input[random_e_indices[i], :]
                 i_data = I_input[random_i_indices[i], :]
+                
+                # Shift data according to tau
+                if tau > 0
+                    e_data = e_data[1:end-tau]
+                    i_data = i_data[tau+1:end]
+                elseif tau < 0
+                    e_data = e_data[-tau+1:end]
+                    i_data = i_data[1:end+tau]
+                end
+                
+                # Compute Pearson correlation for this tau and add to the total
+                total_correlation += cor(e_data, i_data)
+            end
+
+            # Compute average correlation for this tau
+            avg_correlations[tau] = total_correlation / num_pairs
+        end
+    end
+
+    return avg_correlations
+end
+
+
+function compute_cross_correlation(E_input::Matrix, I_input::Matrix, tau_range::UnitRange{Int}=-30:30, num_pairs::Int=50)
+    # Ensure input matrices have the same dimensions
+    if size(E_input) != size(I_input)
+        error("E_input and I_input must have the same dimensions.")
+    end
+
+    Ncells, Nsteps = size(E_input)
+    
+    num_pairs = round(Int, Ncells / 1.5)
+
+    # Ensure the number of pairs is less than or equal to Ncells
+    if num_pairs > Ncells
+        error("The number of pairs cannot exceed the number of cells.")
+    end
+    
+    avg_correlations = Dict{Int, Float64}()
+
+    for tau in tau_range
+        if abs(tau) >= Nsteps
+            avg_correlations[tau] = 0
+        else
+            total_correlation = 0.0
+            for i = 1:num_pairs
+                # Randomly select distinct indices for E_input and I_input
+                e_index = rand(1:Ncells)
+                i_index = rand(setdiff(1:Ncells, e_index))
+
+                e_data = E_input[e_index, :]
+                i_data = I_input[i_index, :]
                 
                 # Shift data according to tau
                 if tau > 0

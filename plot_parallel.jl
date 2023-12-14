@@ -48,7 +48,7 @@ end
 
 # Retrieve the main directory from command-line arguments
 main_dir = get_arg("--main_dir", "/default/path/to/main_dir")
-event_thre = parse(Float64, get_arg("--event_thre", "2.0"))
+event_thre = parse(Float64, get_arg("--event_thre", "0.8"))
 
 # Average each type of correlation
 avg_cross_corr_E_E = average_correlations(main_dir, "cross_corr_E_E.jld2")
@@ -266,19 +266,20 @@ function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, a
     time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
     
     left_margin = 20mm
-    p = plot(size=(800, 400),left_margin=left_margin)
+    p = plot(size=(800, 400), left_margin=left_margin, ylim=(0, 10), bottom_margin=5mm)  # Adjust bottom margin as needed
 
     ribbon_alpha = 0.1
-    # Plot E rates with error ribbon
-    plot!(p, time_axis, avg_e_activity, ribbon = std_e_activity, label="E Rates", color=:red, fillalpha=ribbon_alpha)
-
     # Plot I rates with error ribbon
     plot!(p, time_axis, avg_i_activity, ribbon = std_i_activity, label="I Rates", color=:blue, fillalpha=ribbon_alpha)
-
-    xlabel!(p, "Time (ms)")
-    ylabel!(p, "Average Rate")
+    plot!(p, time_axis, avg_e_activity, ribbon = std_e_activity, label="E Rates", color=:red, fillalpha=ribbon_alpha)
+    # Increase the size of x and y tick labels
+    plot!(p, xtickfontsize=20, ytickfontsize=20)
+    
+    # Set the labels with increased size and add the title
+    xlabel!(p, "Time (ms)", xguidefontsize=20)  # Increase label size for x-axis
+    ylabel!(p, "Average Rate", yguidefontsize=20)  # Increase label size for y-axis
     title!(p, "Average Neural Activity Over Time")
-
+    
     savefig(p, output_file)
 end
 

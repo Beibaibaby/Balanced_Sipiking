@@ -234,6 +234,10 @@ function run_experiment(;
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
                 
+                @save joinpath(dir_name, "e_rate.jld2") e_rate
+                @save joinpath(dir_name, "i_rate.jld2") i_rate
+
+
                 if corr_sign
                     if any(x -> x > 150, e_rate)
                         println("Element in e_rate greater than 150 found. Exiting script.")
@@ -252,8 +256,9 @@ function run_experiment(;
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
-                        plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=5, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean",xtickfont=font(12), ytickfont=font(12),legendfontsize=12,
+                        titlefontsize=14, xlabelfontsize=12, ylabelfontsize=12)
+                        plot!(time_values, i_rate, label="Inhibitory", lw=5, linecolor=:deepskyblue2,left_margin=plot_margin,bottom_margin=plot_margin)
                     end 
 
                     if low_plot # this parameter controls whether to focus on the zoom in low activity

@@ -167,7 +167,7 @@ function run_experiment(;
             
         if !use_init_weights  # Save only if new weights are generated
             print("no using initials")
-            @save "weights_initial_$timestamp_str.jld2" weights_initial
+            @save "./weights_initial_$timestamp_str.jld2" weights_initial
         end
 
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
@@ -980,7 +980,7 @@ dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_suit
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
 use_init_weights = parse(Bool, get_arg("--use_init_weights", "false"))
-init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/Balanced_Sipiking/weights_initial_2024-01-08_11-21-32.jld2")  # Adjust the default as needed
+init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_initial_2024-01-08_11-21-32.jld2")  # Adjust the default as needed
 
 # Initialize variable for initial weights
 #init_weights = nothing

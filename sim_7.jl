@@ -10,7 +10,8 @@ include("./src/LIF_1.0.0_compare.jl")
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
     jei_para,jii_para,jee_para, stim_duration,stim_start_time,ie_sign,ee_sign,corr_flag,
     add_noise,sigma_noise,scale_noise,d_ee,f_ee,d_ie,f_ie,
-    stim_duration_2,stim_start_2,stimstr_2,c_noise,peak_ratio,large_peak_mean)
+    stim_duration_2,stim_start_2,stimstr_2,c_noise,peak_ratio,large_peak_mean,
+    use_init_weights=false, init_weights=nothing)
     println("Setting up parameters")
     #corr_flag=false
     # Network parameters
@@ -113,15 +114,23 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     # Here we only need one decay/facilitation factor for one given neuron i, the factors from i to j are all the same
 
-    # Random connections
-    weights[1:Ne, 1:Ne] .= jee .* (rand(Ne, Ne) .< pee)
-    weights[1:Ne, (1 + Ne):Ncells] .= jei .* (rand(Ne, Ni) .< pei)
-    weights[(1 + Ne):Ncells, 1:Ne] .= jie .* (rand(Ni, Ne) .< pie)
-    weights[(1 + Ne):Ncells, (1 + Ne):Ncells] .= jii .* (rand(Ni, Ni) .< pii)
-    
-    for ci = 1:Ncells
-        weights[ci, ci] = 0
+    # Initialize or load weights
+    if use_init_weights && init_weights !== nothing
+        weights = init_weights
+    else
+        weights = zeros(Ncells, Ncells)
+        weights[1:Ne, 1:Ne] .= jee .* (rand(Ne, Ne) .< pee)
+        weights[1:Ne, (1 + Ne):Ncells] .= jei .* (rand(Ne, Ni) .< pei)
+        weights[(1 + Ne):Ncells, 1:Ne] .= jie .* (rand(Ni, Ne) .< pie)
+        weights[(1 + Ne):Ncells, (1 + Ne):Ncells] .= jii .* (rand(Ni, Ni) .< pii)
+        
+        for ci = 1:Ncells
+            weights[ci, ci] = 0
+        end
     end
+
+    
+    weights_initial = copy(weights) #save the weights_initial
 
     maxTimes = round(Int, maxrate * T / 1000)
     times = zeros(Ncells, maxTimes)
@@ -336,7 +345,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
        println("no over max")
     end
     
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial
 end
 
 function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)

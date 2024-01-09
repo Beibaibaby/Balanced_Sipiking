@@ -167,7 +167,7 @@ function run_experiment(;
             
         if !use_init_weights  # Save only if new weights are generated
             print("no using initials")
-            @save "./weights_initial_$timestamp_str.jld2" weights_initial
+            @save "/gpfs/data/doiron-lab/draco/weights_initial_$timestamp_str.jld2" weights_initial
         end
 
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
@@ -195,55 +195,76 @@ function run_experiment(;
                 window_size = 25  # in ms
                 step_size = 5     # in ms
 
-                neighborhood_size = 2
+                if add_noise
+                    
+                    neighborhood_size = 2
+                    
+                    times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
+                    println("kick time is")
+                    println(record_kick)
+                    println("times")
+                    println(times[1:50,:])
+                    println("times motified")
+                    println(times_modified[1:50,:])
+                    
+                    e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
+                    i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
-                times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
-                println("kick time is")
-                println(record_kick)
-                println("times")
-                println(times[1:50,:])
-                println("times motified")
-                println(times_modified[1:50,:])
-                
-                e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
-                i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
+                    
+                    win_buff = 400
+                    buffer_before=10
+                    #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
+                    #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
+                    
+                    
+                    e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
+                    i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
+                    
+                    e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
+                    i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
 
-                
-                win_buff = 400
-                buffer_before=10
-                #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
-                #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
+                    println("events average for E")
+                    println(e_rate_after_peak)
+                    println("events average for I")
+                    println(i_rate_after_peak)
 
-                e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
-                i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
-                
-                e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
-                i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
-
-                println("events average for E")
-                println(e_rate_after_peak)
-                println("events average for I")
-                println(i_rate_after_peak)
-
-                @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
-                @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
-                @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
-                @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
+                    @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
+                    @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
+                    @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
+                    @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
 
 
 
-                plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
-                savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
-
+                    plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                    plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                    savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
+                    savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
+                end 
 
                 #print(Ne)
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
+
+
                 
                 @save joinpath(dir_name, "e_rate.jld2") e_rate
                 @save joinpath(dir_name, "i_rate.jld2") i_rate
+
+                avg_E_rate = mean(e_rate, dims=2)
+                avg_I_rate = mean(i_rate, dims=2)
+
+                N_boss = 100 # The boss in the population
+
+                sorted_indices_e = sortperm(avg_E_rate[:, 1], rev=true)
+                top_n_e_neurons = sorted_indices_e[1:N_boss]
+
+                # Get indices of top N inhibitory neurons
+                sorted_indices_i = sortperm(avg_I_rate[:, 1], rev=true)
+                top_n_i_neurons = sorted_indices_i[1:N_boss]
+
+                @save joinpath(dir_name, "top_n_e_neurons_noise.jld2") top_n_e_neurons
+                @save joinpath(dir_name, "top_n_i_neurons_noise.jld2") top_n_i_neurons
+
 
 
                 if corr_sign
@@ -289,17 +310,6 @@ function run_experiment(;
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     end 
 
-
-                    if low_plot # this parameter controls whether to focus on zooming in on low activity
-                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
-                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
-                    else
-                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate (d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
-                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
-                    end
-                    
-
-
                 end
                 
                 
@@ -331,10 +341,11 @@ function run_experiment(;
 
                 fig_filename = "$dir_name/plot_FR_$timestamp_str.png"
                 savefig(p2, fig_filename)
-
-                fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
-                savefig(p2_cons, fig_filename_cons)
-
+                
+                if add_noise 
+                   fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
+                   savefig(p2_cons, fig_filename_cons)
+                end
 
 
                 # Generate scaled x-values
@@ -834,91 +845,6 @@ function run_experiment(;
 
 
 
-        if do_v_corr #if compute the correlation
-
-            EPSP_EPSP_pool=v_history[1:100,end-9999:end]
-            TT_pool=v_history[501:600,end-9999:end]
-            IPSP_IPSP_pool=v_history[1001:1100,end-9999:end]
-
-            IPSP_IPSP_pool= IPSP_IPSP_pool .- 2
-            TT_pool=TT_pool .- 1
-            EPSP_EPSP_pool=EPSP_EPSP_pool .+ 0.2
-
-            # Initialize accumulators
-            EPSP_EPSP_accumulator = zeros(100, 10000)
-            TT_accumulator = zeros(100, 10000)
-            IPSP_IPSP_accumulator = zeros(100, 10000)
-
-            if do_repeat_v_corr
-
-            n_run=20
-            for iter in 1:n_run
-                println("Current iteration: $iter")  # This line prints the current iteration number
-                local EPSP_EPSP_pool, TT_pool, IPSP_IPSP_pool
-                local times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track, weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track
-                times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,
-                weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track,record_kick=sim_dynamic(
-                    params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
-                    params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
-                    params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
-                    params.add_noise, params.sigma_noise, params.scale_noise, params.d_ee,params.f_ee,params.d_ie,params.f_ie,
-                    params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise)
-
-                EPSP_EPSP_pool = v_history[1:100, end-9999:end]
-                TT_pool = v_history[501:600, end-9999:end]
-                IPSP_IPSP_pool = v_history[1001:1100, end-9999:end]
-                
-                IPSP_IPSP_pool = IPSP_IPSP_pool .- 1 #hard?
-                TT_pool = TT_pool .- 1
-                EPSP_EPSP_pool = EPSP_EPSP_pool .+ 0.2
-                
-                # Add to accumulator
-                EPSP_EPSP_accumulator .+= EPSP_EPSP_pool
-                TT_accumulator .+= TT_pool
-                IPSP_IPSP_accumulator .+= IPSP_IPSP_pool
-            end
-
-            # Compute the average
-            EPSP_EPSP_avg = EPSP_EPSP_accumulator ./ n_run
-            TT_avg = TT_accumulator ./ n_run
-            IPSP_IPSP_avg = IPSP_IPSP_accumulator ./ n_run
-
-            IPSP_IPSP_pool= EPSP_EPSP_avg
-            TT_pool=TT_avg
-            EPSP_EPSP_pool=IPSP_IPSP_avg
-
-            end
-
-
-            avg_correlation_E_I=compute_correlation(E_input, I_input)
-            avg_correlation_E_E=compute_correlation(E_input, E_input)
-            avg_correlation_I_I=compute_correlation(I_input, I_input)
-            cross_corr_E_E=compute_cross_correlation(E_input[:, end-999:end], E_input[:, end-999:end])
-            cross_corr_I_I=compute_cross_correlation(I_input[:, end-999:end], I_input[:, end-999:end])
-            cross_corr_E_I=compute_cross_correlation(E_input[:, end-999:end], I_input[:, end-999:end])
-            cross_corr_I_E=compute_cross_correlation(I_input[:, end-999:end], E_input[:, end-999:end])
-
-
-            println("avg correlation(E-I): ", avg_correlation_E_I)
-            println("avg correlation(E-E): ", avg_correlation_E_E)
-            println("avg correlation(I-I): ", avg_correlation_I_I)
-
-            cross_EPSP_EPSP=compute_cross_correlation(EPSP_EPSP_pool,EPSP_EPSP_pool)
-            cross_IPSP_IPSP=compute_cross_correlation(IPSP_IPSP_pool,IPSP_IPSP_pool)
-            cross_EPSP_IPSP=compute_cross_correlation(EPSP_EPSP_pool,IPSP_IPSP_pool)
-            cross_IPSP_EPSP=compute_cross_correlation(IPSP_IPSP_pool,EPSP_EPSP_pool)
-            cross_T_T=compute_cross_correlation(TT_pool,TT_pool)
-
-            #plot_correlations(cross_corr_E_E, cross_corr_I_I, cross_corr_E_I,cross_corr_I_E)
-            plot_correlations_mem(cross_EPSP_EPSP, cross_IPSP_IPSP, cross_T_T, cross_EPSP_IPSP, cross_IPSP_EPSP,"$dir_name/plot_corr_PSP_mem.png",event_thre)
-
-            plot_cells(v_history, [1, 505, 1005])
-
-            println("finish")
-
-        end
-
-
 end
 
 
@@ -947,10 +873,10 @@ ee_sign = parse(Bool, get_arg("--ee_sign", "true")) #controal E->E is dynamic or
 corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and plot EPSP and IPSP
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
-sigma_noise = parse(Float64, get_arg("--sigma_noise", "0.3"))
+sigma_noise = parse(Float64, get_arg("--sigma_noise", "1.0"))
 add_noise = parse(Bool, get_arg("--add_noise", "true"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "1"))
-c_noise = parse(Float64, get_arg("--c_noise", "0.2"))
+c_noise = parse(Float64, get_arg("--c_noise", "0.01"))
 
 env = parse(Int, get_arg("--env", "3"))
 
@@ -968,18 +894,18 @@ stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
 stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
 
-event_thre = parse(Float64, get_arg("--event_thre", "0.65"))
-peak_ratio = parse(Float64, get_arg("--peak_ratio", "20000"))
-large_peak_mean = parse(Float64, get_arg("--large_peak_mean", "200"))
+event_thre = parse(Float64, get_arg("--event_thre", "0.8"))
+peak_ratio = parse(Float64, get_arg("--peak_ratio", "10000"))
+large_peak_mean = parse(Float64, get_arg("--large_peak_mean", "300"))
 
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
-dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_suites/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
+dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_new/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
 
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
-use_init_weights = parse(Bool, get_arg("--use_init_weights", "false"))
+use_init_weights = parse(Bool, get_arg("--use_init_weights", "true"))
 init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_initial_2024-01-08_11-21-32.jld2")  # Adjust the default as needed
 
 # Initialize variable for initial weights

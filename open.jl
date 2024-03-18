@@ -24,3 +24,10 @@ loaded_data = load_data_from_jld2(file_path, data_key)
 
 println("Loaded data: ")
 println(loaded_data)
+
+ci = 158
+if ci in loaded_data
+    # Your statements here
+    println("ci is in the top_n_e_neurons list!")
+    # Add more statements as needed
+end

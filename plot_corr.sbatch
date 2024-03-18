@@ -25,7 +25,7 @@ event_thre=0.8
 mkdir -p "$dir_name_in"
 
 # Run the Julia script with the current values and pass the generated directory name
-julia run_6.jl --T 3000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 300 --peak_ratio 10000  #--f_ee 0.0
+julia run_7.jl --T 2000 --dir_name_in "$dir_name_in" --c_noise 0.01 --sigma_noise 1.0 --event_thre $event_thre --large_peak_mean 300 --peak_ratio 10000  #--f_ee 0.0
 #--corr_sign false
 #--f_ee 0.3 --d_ee 0.6 --f_ee 0.025 --corr_sign false
 #--corr_sign false

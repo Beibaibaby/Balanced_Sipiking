@@ -8,18 +8,13 @@ using Distributed
 using SharedArrays
 using Measures
 using Distributions
-
-#print("Number of threads: ")
-#println(Sys.CPU_THREADS - 1)
-#addprocs(Sys.CPU_THREADS - 1)
-
-#using Profile
-#@everywhere using SharedArrays
-#@everywhere include("sim_inject_3.0.0.jl") 
 using SharedArrays
-include("sim_7.jl") 
 
-struct NetworkParameters
+ENV["GKSwstype"] = "100"  # Use the off-screen GKS terminal to aviod running messages
+
+include("sim_7.jl") # include the network simulation code
+
+struct NetworkParameters #struct for the network parameters
     Ncells::Int
     Ne::Int
     Ni::Int
@@ -125,6 +120,8 @@ function run_experiment(;
          
         timestamp = Dates.now()
         timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+
+        # These codes tell us which machine we are using 
         if env == 1 
             dir_name ="/root/autodl-tmp/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
             if !isdir(dir_name_in)
@@ -145,8 +142,6 @@ function run_experiment(;
 
         file_path_test = joinpath(dir_name, "directory_name.txt")
 
-        # Create the directory if it does not exist
-        #isdir(dir_name) || mkdir(dir_name)
 
         # Open the file in write mode, write the dir_name, and close the file
         open(file_path_test, "w") do file
@@ -165,6 +160,7 @@ function run_experiment(;
             params.stim_duration_2,params.stim_start_2,params.stimstr_2,params.c_noise,peak_ratio,large_peak_mean,
             use_init_weights, init_weights)
             
+        # Here, we check whether we are using existing initial weights. If not, we save the initial weights.
         if !use_init_weights  # Save only if new weights are generated
             print("no using initials")
             @save "/gpfs/data/doiron-lab/draco/weights_initial_$timestamp_str.jld2" weights_initial
@@ -172,19 +168,16 @@ function run_experiment(;
 
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
         overall_mean_rate_I = mean(1000 * ns[(params.Ne+1):Ncells] / params.T)
+
         println("mean excitatory firing rate: ", overall_mean_rate_E, " Hz")
         println("mean inhibitory firing rate: ", overall_mean_rate_I, " Hz")
         
         product_weights_ee = weights_D_ee_track .* weights_F_ee_track
 
 
-
-
         if doplot 
 
             # Generate a timestamp for unique filenames
-
-
                 println("creating plot")
            
                 # Define plot size: (width, height)
@@ -241,7 +234,6 @@ function run_experiment(;
                     savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
                 end 
 
-                #print(Ne)
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 

@@ -5,6 +5,8 @@ using Statistics
 using ProgressMeter
 using Plots
 
+ENV["GKSwstype"] = "100"  # Use the off-screen GKS terminal
+
 include("./src/LIF_1.0.0_compare.jl")
 
 function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_para,
@@ -176,6 +178,8 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     gaussian_noise_global=0
     large_noise_flag=false
 
+    top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_new/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-01-10_15-07-18/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
+
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -214,9 +218,10 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
            large_variance = sigma_noise*0.01
            #peak_ratio = 2000
            
-           #if ti % 5 == 0
+           #longer noise or not
+           if ti % 10 == 0
            gaussian_noise_global, large_noise_flag = bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
-           #end
+           end
            
            if large_noise_flag
             push!(record_kick, ti)
@@ -259,6 +264,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             else
                synInput=synInput_E+synInput_I
             end
+            
 
             if (ci < Nstim) && (t > stimstart) && (t < stimend)
                 synInput += stimstr
@@ -273,7 +279,12 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             if add_noise
 
                gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
-               synInput += gaussian_noise_global + gaussian_noise_local
+               synInput += gaussian_noise_local
+
+               if ci in top_n_e_neurons
+                synInput += gaussian_noise_global
+               end 
+               
                #gaussian_noise_local = sqrt(1-c_noise) * rand(Normal(0, 1)) * sigma_noise * dt
                #gaussian_noise_local = sqrt(1-c_noise) * 0 * (1 - 2 * rand()) * sigma_noise * dt
                # try a stronger local noise
@@ -346,6 +357,15 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     end
     
     return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial
+end
+
+function load_data_from_jld2(file_path, data_key)
+    # Open the .jld2 file and read the data associated with the given key
+    data = jldopen(file_path, "r") do file
+        return file[data_key]
+    end
+
+    return data
 end
 
 function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)

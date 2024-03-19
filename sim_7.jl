@@ -98,8 +98,17 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     thresh = zeros(Ncells)
     tau = zeros(Ncells)
 
-    mu[1:Ne] .= (muemax - muemin) .* rand(Ne) .+ muemin
-    mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
+    if use_init_weights && init_weights !== nothing
+
+        mu=init_weights[2]
+
+
+    else
+
+        mu[1:Ne] .= (muemax - muemin) .* rand(Ne) .+ muemin
+        mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
+
+    end
 
     thresh[1:Ne] .= threshe
     thresh[(Ne + 1):Ncells] .= threshi
@@ -118,7 +127,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     # Initialize or load weights
     if use_init_weights && init_weights !== nothing
-        weights = init_weights
+        weights = init_weights[1]
     else
         weights = zeros(Ncells, Ncells)
         weights[1:Ne, 1:Ne] .= jee .* (rand(Ne, Ne) .< pee)
@@ -132,7 +141,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     end
 
     
-    weights_initial = copy(weights) #save the weights_initial
+    weights_initial = [copy(weights),copy(mu)] #save the weights_initial
 
     maxTimes = round(Int, maxrate * T / 1000)
     times = zeros(Ncells, maxTimes)
@@ -248,27 +257,14 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             
-            if corr_flag == true
-              if ci<corr_pairs
-                synInput=synInput_E+(-0.2+mu[ci])/tau[ci]
-                #synInput = synInput_E
-              end
 
-              if ci >= 500 && ci <600
-                synInput=synInput+(1-mu[ci])/tau[ci]
-              end
+            #if (ci < Nstim) && (t > stimstart) && (t < stimend)
+            #    synInput += stimstr
+            #end
 
-              if ci >= 1001 && ci <1100
-                synInput=synInput_I+(2-mu[ci])/tau[ci]
-              end
-            else
-               synInput=synInput_E+synInput_I
-            end
-            
-
-            if (ci < Nstim) && (t > stimstart) && (t < stimend)
+            if (ci in top_n_e_neurons) && (t > stimstart) && (t < stimend)
                 synInput += stimstr
-            end
+            end 
             
 
             if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)

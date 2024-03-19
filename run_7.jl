@@ -128,7 +128,7 @@ function run_experiment(;
                 mkpath(dir_name_in)
             end
         elseif env == 2
-           dir_name = "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
+           #dir_name = "/gpfs/data/doiron-lab/draco/results/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str"
            if !isdir(dir_name_in)
             mkpath(dir_name_in)
         end
@@ -163,7 +163,7 @@ function run_experiment(;
         # Here, we check whether we are using existing initial weights. If not, we save the initial weights.
         if !use_init_weights  # Save only if new weights are generated
             print("no using initials")
-            @save "/gpfs/data/doiron-lab/draco/weights_initial_$timestamp_str.jld2" weights_initial
+            @save "/gpfs/data/doiron-lab/draco/weights_$timestamp_str.jld2" weights_initial
         end
 
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
@@ -209,29 +209,31 @@ function run_experiment(;
                     #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
                     #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
                     
-                    
-                    e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
-                    i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
-                    
-                    e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
-                    i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
+                    # if kick_record is non-empty, then we compute the average activity post-kick
+                    # condition check for non-empty kick_record
+                    if record_kick != []
+                        e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
+                        i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
+                        
+                        e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
+                        i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
 
-                    println("events average for E")
-                    println(e_rate_after_peak)
-                    println("events average for I")
-                    println(i_rate_after_peak)
+                        println("events average for E")
+                        println(e_rate_after_peak)
+                        println("events average for I")
+                        println(i_rate_after_peak)
 
-                    @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
-                    @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
-                    @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
-                    @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
+                        @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
+                        @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
+                        @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
+                        @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
+                
 
-
-
-                    plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                    plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                    savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
-                    savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
+                        plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                        plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                        savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
+                        savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
+                    end
                 end 
 
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
@@ -262,6 +264,12 @@ function run_experiment(;
                 if corr_sign
                     if any(x -> x > 150, e_rate)
                         println("Element in e_rate greater than 150 found. Exiting script.")
+
+                        open(file_path_test, "w") do file
+                            #write "Element in e_rate greater than 150 found. Exiting script."
+                            write(file, "Element in e_rate greater than 150 found. Exiting script.")
+                        end
+
                         exit()
                     end
                 end
@@ -290,9 +298,6 @@ function run_experiment(;
                         plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
                     end
                     
-
-
-
                 else
                     if low_plot ##this para control whether focus on the zoom in low activity
                         p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
@@ -303,15 +308,8 @@ function run_experiment(;
                     end 
 
                 end
-                
-                
-
-
-                
-                #Create the directory for results
-                #if !isdir(dir_name)
-                #    mkdir(dir_name)
-                #end
+        
+                          
 
                 plot_curve(d_ee, f_ee, d_ie, f_ie, "$dir_name/plot_curve_$timestamp_str.png")
                 
@@ -866,7 +864,7 @@ corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and pl
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "1.0"))
-add_noise = parse(Bool, get_arg("--add_noise", "true"))
+add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "1"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.01"))
 

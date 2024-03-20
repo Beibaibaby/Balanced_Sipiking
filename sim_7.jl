@@ -187,8 +187,8 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     gaussian_noise_global=0
     large_noise_flag=false
 
-    top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_new/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-01-10_15-07-18/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
-
+    top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_new/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-03-20_12-52-39/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
+    println(top_n_e_neurons)
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -263,7 +263,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             #end
 
             if (ci in top_n_e_neurons) && (t > stimstart) && (t < stimend)
-                synInput += stimstr
+               synInput += stimstr
             end 
             
 

@@ -239,28 +239,50 @@ function run_experiment(;
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
-
                 
                 @save joinpath(dir_name, "e_rate.jld2") e_rate
                 @save joinpath(dir_name, "i_rate.jld2") i_rate
 
-                avg_E_rate = mean(e_rate, dims=2)
-                avg_I_rate = mean(i_rate, dims=2)
+                #compute avg_E_rate, which is the average rate of each e neuron
+                T_seconds = T / 1000
 
-                N_boss = 100 # The boss in the population
+                avg_E_rate = ns[1:Ne] / T_seconds
 
-                sorted_indices_e = sortperm(avg_E_rate[:, 1], rev=true)
-                top_n_e_neurons = sorted_indices_e[1:N_boss]
+                #compute avg_I_rate, which is the average rate of each i neuron
+                avg_I_rate = ns[(Ne+1):Ncells] / T_seconds
+
+
+
+                N_boss = 200 # The boss in the population
+
+                top_n_e_neurons = sortperm(avg_E_rate, rev=true)[1:N_boss]
+            
 
                 # Get indices of top N inhibitory neurons
-                sorted_indices_i = sortperm(avg_I_rate[:, 1], rev=true)
-                top_n_i_neurons = sorted_indices_i[1:N_boss]
+                top_n_i_neurons = sortperm(avg_I_rate, rev=true)[1:N_boss]
 
                 @save joinpath(dir_name, "top_n_e_neurons_noise.jld2") top_n_e_neurons
                 @save joinpath(dir_name, "top_n_i_neurons_noise.jld2") top_n_i_neurons
 
+                # Sort the average rates in descending order
+                sorted_avg_E_rate = sort(avg_E_rate, rev=true)
+                sorted_avg_I_rate = sort(avg_I_rate, rev=true)
 
+                
+            
+                bar(1:length(sorted_avg_E_rate), sorted_avg_E_rate, 
+                title="Sorted Average Rate of Excitatory Neurons", 
+                xlabel="Neuron Index (Sorted)", ylabel="Average Rate (Hz)", 
+                legend=false, color=:red,lw=0)
+                savefig(joinpath(dir_name, "sorted_average_rate_excitatory_neurons_bar.png"))
 
+                
+                bar(1:length(sorted_avg_I_rate), sorted_avg_I_rate, 
+                title="Sorted Average Rate of Inhibitory Neurons", 
+                xlabel="Neuron Index (Sorted)", ylabel="Average Rate (Hz)", 
+                legend=false, color=:blue,lw=0)
+
+                savefig(joinpath(dir_name, "sorted_average_rate_inhibitory_neurons_bar.png"))
                 if corr_sign
                     if any(x -> x > 150, e_rate)
                         println("Element in e_rate greater than 150 found. Exiting script.")
@@ -896,7 +918,7 @@ dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_new/
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
 use_init_weights = parse(Bool, get_arg("--use_init_weights", "true"))
-init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_initial_2024-01-08_11-21-32.jld2")  # Adjust the default as needed
+init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_2024-03-20_12-52-45.jld2")  # Adjust the default as needed
 
 # Initialize variable for initial weights
 #init_weights = nothing

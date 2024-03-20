@@ -253,7 +253,7 @@ function run_experiment(;
 
 
 
-                N_boss = 200 # The boss in the population
+                N_boss = 50 # The boss in the population
 
                 top_n_e_neurons = sortperm(avg_E_rate, rev=true)[1:N_boss]
             
@@ -913,12 +913,12 @@ large_peak_mean = parse(Float64, get_arg("--large_peak_mean", "300"))
 timestamp = Dates.now()
 timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
-dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_new/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
+dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_50/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
 
 corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
 
 use_init_weights = parse(Bool, get_arg("--use_init_weights", "true"))
-init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_2024-03-20_12-52-45.jld2")  # Adjust the default as needed
+init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_2024-03-20_16-03-16.jld2")  # Adjust the default as needed
 
 # Initialize variable for initial weights
 #init_weights = nothing

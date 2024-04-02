@@ -189,6 +189,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
     top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_150/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-03-20_12-52-39/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
     println(top_n_e_neurons)
+    large_noise_last = 0
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -222,21 +223,36 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             
            #gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
 
-           #large_peak_mean = 100
+           large_peak_mean = 5.0/taue
            small_variance = sigma_noise*0.01
-           large_variance = sigma_noise*0.01
-           #peak_ratio = 2000
+           large_variance = sigma_noise*0.1
+           peak_ratio = 4000
            
            #longer noise or not
-           if ti % 10 == 0
-           gaussian_noise_global, large_noise_flag = bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
-           end
            
-           if large_noise_flag
-            push!(record_kick, ti)
-           else
-            gaussian_noise_global=0
-           end
+           gaussian_noise_global, large_noise_flag = bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_peak_mean, small_variance, large_variance, peak_ratio)
+           
+            
+            if large_noise_flag
+              push!(record_kick, ti)
+              large_noise_last = gaussian_noise_global
+              println("noise")
+              println("large_noise_last is",large_noise_last)
+            else
+                if record_kick != []
+                    if abs(ti - record_kick[end]) < 300
+                                #println("ti is",ti)
+                                #println("record_kick is",record_kick[end])
+                                
+                                gaussian_noise_global = large_noise_last
+                                #println("large_noise_last is",large_noise_last)
+                        
+                    else
+                       gaussian_noise_global=0
+                    end
+
+                end
+            end
         end
 
         for ci = 1:Ncells
@@ -251,9 +267,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             synInput_I = (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             E_input[ci, ti] = synInput_E #* 0.1
             I_input[ci, ti] = synInput_I #* 0.1
-            ###Testing 
-            #E_input[ci, ti] = forwardInputsEPrev[ci]
-            #I_input[ci, ti] = forwardInputsIPrev[ci]
+           
 
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             
@@ -280,22 +294,6 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
                if ci in top_n_e_neurons
                 synInput += gaussian_noise_global
                end 
-               
-               #gaussian_noise_local = sqrt(1-c_noise) * rand(Normal(0, 1)) * sigma_noise * dt
-               #gaussian_noise_local = sqrt(1-c_noise) * 0 * (1 - 2 * rand()) * sigma_noise * dt
-               # try a stronger local noise
-
-               #if (ci < Ne)
-               #    synInput += gaussian_noise_global + gaussian_noise_local
-               #else
-               #     synInput +=  gaussian_noise_local
-               #end
-               #if ci < 40
-               #     synInput += gaussian_noise_global + gaussian_noise_local
-               #else
-               #     synInput += gaussian_noise_local
-               #end
-               
 
             end
            
@@ -372,14 +370,17 @@ function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_pea
     # Determine which distribution to sample from
     if rand() < peak_ratio / (peak_ratio + 1)
         noise = rand(small_peak) * 0.001
+        noise = sqrt(c_noise) * scale_noise * noise * dt
         large_noise_flag = false  # Flag for large noise not generated
-        #noise = 0
+        
     else
         noise = rand(large_peak)
         large_noise_flag = true  # Flag for large noise generated
     end
 
-    return sqrt(c_noise) * scale_noise * noise * dt, large_noise_flag
+
+
+    return noise, large_noise_flag
 end
 
 
@@ -731,7 +732,7 @@ function compute_average_activity_post_kick_2(rate_cons, record_kick, buffer_tim
     sort!(record_kick)
 
     # Convert kick times to indices in the rate arrays, adjusting for the time scale
-    kick_indices = [round(Int, (kick_time / 10 + 30) / step_size) for kick_time in record_kick]
+    kick_indices = [round(Int, (kick_time / 10 ) / step_size) for kick_time in record_kick]
     buffer_steps = round(Int, buffer_time / step_size)
 
     # Create and merge intervals

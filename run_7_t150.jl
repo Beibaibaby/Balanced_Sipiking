@@ -192,7 +192,7 @@ function run_experiment(;
                     
                     neighborhood_size = 2
                     
-                    times_modified = remove_spikes_near_kicks(times, record_kick, neighborhood_size)
+                    times_modified = times #remove_spikes_near_kicks(times, record_kick, neighborhood_size)
                     println("kick time is")
                     println(record_kick)
                     println("times")
@@ -204,8 +204,8 @@ function run_experiment(;
                     i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
                     
-                    win_buff = 400
-                    buffer_before=10
+                    win_buff = 1000
+                    buffer_before=50
                     #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
                     #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
                     
@@ -214,7 +214,7 @@ function run_experiment(;
                     if record_kick != []
                         e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
                         i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
-                        
+                        print("e_rate_after_peak is", e_rate_after_peak)
                         e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
                         i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
 
@@ -301,6 +301,19 @@ function run_experiment(;
                 #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
                 time_values = [i * step_size + window_size  for i in 1:n_steps]
 
+                mask = trues(params.Ne)  # Start with all true
+                for neuron_index in top_n_e_neurons
+                    mask[neuron_index] = false  # Set to false for neurons to exclude
+                end
+
+                timek=times[1:params.Ne, :]
+
+                times_adjusted = timek[mask, :]
+
+                # Now calculate the sliding rate for the remaining excitatory neurons
+                e_rate_removed = compute_sliding_rate(times_adjusted, window_size, step_size, params.T)
+
+
                 # Add a code to detect low rate or not 
                 if add_noise
                     if low_plot ##this para control whether focus on the zoom in low activity
@@ -319,15 +332,44 @@ function run_experiment(;
                         p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
                         plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
                     end
+
+                    if low_plot ##this para control whether focus on the zoom in low activity
+                        p2_removed = plot(time_values, e_rate_removed, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
+                        plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
+                    else
+                        p2_removed = plot(time_values, e_rate_removed, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=5, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean",xtickfont=font(12), ytickfont=font(12),legendfontsize=12,
+                        titlefontsize=14, xlabelfontsize=12, ylabelfontsize=12)
+                        plot!(time_values, i_rate, label="Inhibitory", lw=5, linecolor=:deepskyblue2,left_margin=plot_margin,bottom_margin=plot_margin)
+                    end 
+
+                    fig_filename_removed = "$dir_name/plot_FR_removed_$timestamp_str.png"
+
+                    savefig(p2_removed, fig_filename_removed)
+
                     
                 else
                     if low_plot ##this para control whether focus on the zoom in low activity
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)", ylim=(0,5))
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
                         plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
                     else
-                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="Firing rate(d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie stim=$stimstr event_thre=$event_thre)")
-                        plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
+                        p2 = plot(time_values, e_rate, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=5, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean",xtickfont=font(12), ytickfont=font(12),legendfontsize=12,
+                        titlefontsize=14, xlabelfontsize=12, ylabelfontsize=12)
+                        plot!(time_values, i_rate, label="Inhibitory", lw=5, linecolor=:deepskyblue2,left_margin=plot_margin,bottom_margin=plot_margin)
                     end 
+
+
+                    if low_plot ##this para control whether focus on the zoom in low activity
+                        p2_removed = plot(time_values, e_rate_removed, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
+                        plot!(time_values, i_rate, label="Inhibitory", lw=2, linecolor=:deepskyblue2,left_margin=plot_margin)
+                    else
+                        p2_removed = plot(time_values, e_rate_removed, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=5, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean",xtickfont=font(12), ytickfont=font(12),legendfontsize=12,
+                        titlefontsize=14, xlabelfontsize=12, ylabelfontsize=12)
+                        plot!(time_values, i_rate, label="Inhibitory", lw=5, linecolor=:deepskyblue2,left_margin=plot_margin,bottom_margin=plot_margin)
+                    end 
+
+                    fig_filename_removed = "$dir_name/plot_FR_removed_$timestamp_str.png"
+
+                    savefig(p2_removed, fig_filename_removed)
 
                 end
         
@@ -353,6 +395,8 @@ function run_experiment(;
 
                 fig_filename = "$dir_name/plot_FR_$timestamp_str.png"
                 savefig(p2, fig_filename)
+
+
                 
                 if add_noise 
                    fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
@@ -886,7 +930,7 @@ corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and pl
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "1.0"))
-add_noise = parse(Bool, get_arg("--add_noise", "false"))
+add_noise = parse(Bool, get_arg("--add_noise", "true"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "1"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.01"))
 
@@ -898,7 +942,7 @@ d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
 f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
-stim_duration= parse(Int, get_arg("--stim_duration", "5"))
+stim_duration= parse(Int, get_arg("--stim_duration", "0"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "200"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
@@ -915,7 +959,7 @@ timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
 
 dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_150/d_ee=$d_ee+f_ie=$f_ie+d_ie=$d_ie+$timestamp_str")
 
-corr_sign = parse(Bool, get_arg("--corr_sign", "true")) ##New sign for correlation
+corr_sign = parse(Bool, get_arg("--corr_sign", "false")) ##New sign for correlation
 
 use_init_weights = parse(Bool, get_arg("--use_init_weights", "true"))
 init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_2024-03-20_12-52-45.jld2")  # Adjust the default as needed

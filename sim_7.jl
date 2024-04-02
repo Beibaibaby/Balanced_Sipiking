@@ -15,6 +15,8 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     stim_duration_2,stim_start_2,stimstr_2,c_noise,peak_ratio,large_peak_mean,
     use_init_weights=false, init_weights=nothing)
     println("Setting up parameters")
+
+    gene = false
     #corr_flag=false
     # Network parameters
 
@@ -186,9 +188,11 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     
     gaussian_noise_global=0
     large_noise_flag=false
+    if gene == false
+     top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_3000/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-03-21_11-32-24/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
+     println(top_n_e_neurons[1:500])
+    end
 
-    top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_50/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-03-20_16-03-10/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
-    println(top_n_e_neurons)
     for ti = 1:Nsteps
         t = dt * ti
         forwardInputsE[:] .= 0
@@ -257,14 +261,17 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
 
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             
+            if gene == true
+                if (ci < Nstim) && (t > stimstart) && (t < stimend)
+                    synInput += stimstr
+                end
+            else
 
-            #if (ci < Nstim) && (t > stimstart) && (t < stimend)
-            #    synInput += stimstr
-            #end
+               if (ci in top_n_e_neurons[1:500]) && (t > stimstart) && (t < stimend)
+                   synInput += stimstr
+               end 
 
-            if (ci in top_n_e_neurons) && (t > stimstart) && (t < stimend)
-               synInput += stimstr
-            end 
+            end
             
 
             if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)

@@ -15,4 +15,4 @@
 stimstr=0.0
 
 # Run the Julia script with the parameters
-julia run_7.jl --stimstr 20.0 --use_init_weights true --T 1000 --stim_duration 30 --corr_sign false
+ julia run_7_t150.jl --stimstr 5.0 --use_init_weights true --T 800 --stim_duration 30 --corr_sign false

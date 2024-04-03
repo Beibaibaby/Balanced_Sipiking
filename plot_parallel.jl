@@ -1,7 +1,7 @@
 using JLD2
 using FilePathsBase
 using Plots
-include("sim_6.jl") 
+include("sim_7_t150.jl") 
 using JLD2
 using Measures
 using DSP 
@@ -117,15 +117,23 @@ function load_and_merge_data(main_dir::String)
         if isdir(sub_dir)
             # Check for the existence of cross_corr_E_E.jld2 in the subdirectory
             cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
+
+            e_rate_after_peak_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
             
             #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
-            if isfile(cross_corr_file_path)
+            if isfile( e_rate_after_peak_file_path)
                 e_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
                 i_file_path = joinpath(sub_dir, "i_rate_after_peak.jld2")
 
                 if isfile(e_file_path) && isfile(i_file_path)
                     e_data = load(e_file_path, "e_rate_after_peak")
                     i_data = load(i_file_path, "i_rate_after_peak")
+
+                    #disregard the entire e_data and i_data is there is rate higher than 30 in e_data
+                    if maximum(e_data) > 30
+                        continue
+                    end
+
                     
                     #print(sub_dir)
                     #println(e_data)
@@ -144,7 +152,7 @@ end
 
 
 e_rates_merged, i_rates_merged = load_and_merge_data(main_dir)
-
+println("e_rates_merged",e_rates_merged)
 @save joinpath(main_dir, "merged_e_rates.jld2") e_rates_merged
 @save joinpath(main_dir, "merged_i_rates.jld2") i_rates_merged
 
@@ -206,15 +214,16 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                 cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
                 
                 #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
+                e_rate_after_peak_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
             
             #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
-            if isfile(cross_corr_file_path)
+            if true #isfile(e_rate_after_peak_file_path)
                 raw_activity_data = load(file_path)
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
                 
                 # Filter the activities in raw_activity, discard if length > max_length
-                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
+                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
 
                 for activity in filtered_activity
                     #println(sub_dir)
@@ -263,6 +272,8 @@ end
 
 # Function to plot average raw activities with error ribbons
 function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, avg_i_activity, std_i_activity, output_file::String)
+    println("plotting")
+    println("avg_e_activity",avg_e_activity)
     time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
     
     left_margin = 20mm
@@ -316,14 +327,18 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
                 cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
                 
                 #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
+                e_rate_after_peak_file_path = joinpath(sub_dir, "e_rate_after_peak.jld2")
             
             #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
-            if isfile(cross_corr_file_path)
+            if isfile(e_rate_after_peak_file_path)
                 raw_activity_data = load(file_path)
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
-                
-                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
+                for i in 1:length(raw_activity)
+                    println(length(raw_activity[i]))
+                end
+
+                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
 
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)
@@ -371,8 +386,10 @@ end
 
 #compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png")) 
 #compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"))
-
+println("computing psd for e")
+println("file_e",file_e)
 compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png"),joinpath(main_dir, "power_spectra_e_mean.png")) 
+
 compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"),joinpath(main_dir, "power_spectra_i_mean.png"))
 
 function convert_to_2d_matrix(sorted_psd_matrix)
@@ -408,12 +425,12 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
                 #cross_corr_file_path = joinpath(sub_dir, "guagua.txt")
             
             #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
-            if isfile(cross_corr_file_path)
+            if true #isfile(cross_corr_file_path)
                 raw_activity_data = load(file_path)
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
 
-                filtered_activity = filter(a -> 83 <= length(a) <= 83, raw_activity)
+                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
                 
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)

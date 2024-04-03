@@ -226,7 +226,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
            large_peak_mean = 5.0/taue
            small_variance = sigma_noise*0.01
            large_variance = sigma_noise*0.1
-           peak_ratio = 4000
+           #peak_ratio = 2000
            
            #longer noise or not
            
@@ -730,30 +730,45 @@ end
 
 function compute_average_activity_post_kick_2(rate_cons, record_kick, buffer_time, step_size, T)
     sort!(record_kick)
+    println(record_kick)
+    println("step_size",step_size)
 
     # Convert kick times to indices in the rate arrays, adjusting for the time scale
     kick_indices = [round(Int, (kick_time / 10 ) / step_size) for kick_time in record_kick]
     buffer_steps = round(Int, buffer_time / step_size)
+    println("kick_indices",kick_indices)
+    println("buffer_steps",buffer_steps)
 
     # Create and merge intervals
     intervals = []
     current_interval = (kick_indices[1], min(kick_indices[1] + buffer_steps, round(Int, T / step_size)))
+    println("current_interval",current_interval)
     for kick_index in kick_indices[2:end]
+        print("kick_index",kick_index)
         if kick_index <= current_interval[2]
             # Extend the current interval if there is an overlap
             current_interval = (current_interval[1], min(kick_index + buffer_steps, round(Int, T / step_size)))
         else
             # Save the current interval and start a new one
-            push!(intervals, current_interval)
             current_interval = (kick_index, min(kick_index + buffer_steps, round(Int, T / step_size)))
+            push!(intervals, current_interval)
+            
         end
+        println("current_interval",current_interval)
+
     end
     push!(intervals, current_interval)  # Add the last interval
 
     # Compute average activity for each interval
     average_activities = []
+    #exculde the interval less than 5 steps
+    intervals = filter(x -> x[2]-x[1]>49, intervals)
+    println("intervals",intervals)
+
     for interval in intervals
+        println("interval",interval)
         interval_rates = rate_cons[interval[1]:min(interval[2], length(rate_cons))]
+        println("interval_rates",interval_rates)
         average_activity = mean(interval_rates)
         push!(average_activities, average_activity)
     end
@@ -766,7 +781,7 @@ function collect_raw_activity_clips(rate_cons, record_kick, buffer_before, buffe
     sort!(record_kick)
 
     # Convert kick times to indices in the rate arrays
-    kick_indices = [round(Int, (kick_time / 10 + 30) / step_size) for kick_time in record_kick]
+    kick_indices = [round(Int, (kick_time / 10 ) / step_size) for kick_time in record_kick]
     buffer_before_steps = round(Int, buffer_before / step_size)
     buffer_after_steps = round(Int, buffer_after / step_size)
 
@@ -790,6 +805,13 @@ function collect_raw_activity_clips(rate_cons, record_kick, buffer_before, buffe
 
     return clips
 end
+
+
+
+
+
+
+
 
 
 

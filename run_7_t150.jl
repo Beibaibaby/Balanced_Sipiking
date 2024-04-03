@@ -195,16 +195,16 @@ function run_experiment(;
                     times_modified = times #remove_spikes_near_kicks(times, record_kick, neighborhood_size)
                     println("kick time is")
                     println(record_kick)
-                    println("times")
-                    println(times[1:50,:])
-                    println("times motified")
-                    println(times_modified[1:50,:])
+                    #println("times")
+                    #println(times[1:50,:])
+                    #println("times motified")
+                    #println(times_modified[1:50,:])
                     
                     e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
                     i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
                     
-                    win_buff = 1000
+                    win_buff = 250
                     buffer_before=50
                     #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
                     #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
@@ -223,9 +223,13 @@ function run_experiment(;
                         println("events average for I")
                         println(i_rate_after_peak)
 
+            
+
                         @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
                         @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
                         @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
+                        #println("average of events raw for E", mean(e_rate_raw_after_peak))
+                        println("events raw for E", e_rate_raw_after_peak)
                         @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
                 
 

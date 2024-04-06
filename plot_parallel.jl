@@ -130,7 +130,15 @@ function load_and_merge_data(main_dir::String)
                     i_data = load(i_file_path, "i_rate_after_peak")
 
                     #disregard the entire e_data and i_data is there is rate higher than 30 in e_data
+                    #println("e_data",e_data)
+                    if e_data == []
+                        println("e_data is empty")
+                        continue
+                    end
+
                     if maximum(e_data) > 30
+                        println("e_data",e_data)
+                        println("skiping")
                         continue
                     end
 
@@ -202,13 +210,43 @@ time_step = 5 # Define your time step size in ms
 
 # ... [previous parts of the script] ...
 
+function should_skip_directory(sub_dir::String, file_name::String, value_threshold::Float64)
+    file_path = joinpath(sub_dir, file_name)
+    if isfile(file_path)
+        raw_activity_data = load(file_path)
+        key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
+        raw_activity = raw_activity_data[key]
+        # Check if any sublist in raw_activity contains a value greater than the threshold
+        return any(sublist -> any(value -> value > value_threshold, sublist), raw_activity)
+    end
+    return false
+end
+
+
+
+
+function find_skippable_directories(main_dir::String, file_name::String, value_threshold::Float64)
+    skippable_directories = Set{String}()
+    for sub_dir in readdir(main_dir, join=true)
+        if isdir(sub_dir) && should_skip_directory(sub_dir, file_name, value_threshold)
+            push!(skippable_directories, sub_dir)
+        end
+    end
+    return skippable_directories
+end
+
+
+
 function average_raw_activity_and_std(main_dir::String, file_name::String, max_length::Int64)
+
+    skippable_directories = find_skippable_directories(main_dir, "e_rate_raw_after_peak.jld2", 30.0)
+
     total_activity = Vector{Float64}()
     squared_activity = Vector{Float64}()
     count = 0
 
-    for sub_dir in readdir(main_dir, join=true)
-        if isdir(sub_dir)
+    for sub_dir in readdir(main_dir, join=true) 
+        if isdir(sub_dir) && !(sub_dir in skippable_directories)
             file_path = joinpath(sub_dir, file_name)
             if isfile(file_path)
                 cross_corr_file_path = joinpath(sub_dir, "cross_corr_E_E.jld2")
@@ -218,21 +256,24 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
             
             #cross_corr_file_path = joinpath(sub_dir, "directory_name.txt")
             if true #isfile(e_rate_after_peak_file_path)
+
                 raw_activity_data = load(file_path)
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
                 
                 # Filter the activities in raw_activity, discard if length > max_length
                 filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+                 
+  
+                #skip the current iteration of the loop iterating through subdirectories if any sublist in filtered_activity contains a value greater than 30. 
+                if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
+                    println("skiping")
+                    continue # Skip this iteration if the condition is met
+                end
+
 
                 for activity in filtered_activity
-                    #println(sub_dir)
-                    #println(mean(activity))
-                    #print("1")
-                    #println(activity)
-                    #println(length(total_activity))
-                    #println(length(activity))
-                    # Resize arrays if necessary and initialize new elements
+ 
                     if length(total_activity) < length(activity)
                         println("!!!!")
                         print(length(total_activity))
@@ -277,7 +318,7 @@ function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, a
     time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
     
     left_margin = 20mm
-    p = plot(size=(800, 400), left_margin=left_margin, ylim=(0, 10), bottom_margin=5mm)  # Adjust bottom margin as needed
+    p = plot(size=(800, 400), left_margin=left_margin, ylim=(0, 12), bottom_margin=5mm)  # Adjust bottom margin as needed
 
     ribbon_alpha = 0.1
     # Plot I rates with error ribbon
@@ -290,6 +331,7 @@ function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, a
     xlabel!(p, "Time (ms)", xguidefontsize=20)  # Increase label size for x-axis
     ylabel!(p, "Average Rate", yguidefontsize=20)  # Increase label size for y-axis
     title!(p, "Average Neural Activity Over Time")
+
     
     savefig(p, output_file)
 end
@@ -301,6 +343,7 @@ end
 # Average raw activities and compute standard deviations
 avg_e_rate_raw_after_peak, std_e_rate_raw_after_peak = average_raw_activity_and_std(main_dir, file_e, max_trial_length)
 avg_i_rate_raw_after_peak, std_i_rate_raw_after_peak = average_raw_activity_and_std(main_dir, file_i, max_trial_length)
+
 
 # Save the averaged raw activities
 @save joinpath(main_dir, "avg_e_rate_raw_after_peak.jld2") avg_e_rate_raw_after_peak
@@ -335,10 +378,17 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
                 for i in 1:length(raw_activity)
-                    println(length(raw_activity[i]))
+                    #println(length(raw_activity[i]))
                 end
 
+
+
                 filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+
+                if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
+                    println("skiping")
+                    continue # Skip this iteration if the condition is met
+                end
 
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)
@@ -431,6 +481,11 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
                 raw_activity = raw_activity_data[key]
 
                 filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+
+                if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
+                    println("skiping")
+                    continue # Skip this iteration if the condition is met
+                end
                 
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)

@@ -36,3 +36,4 @@ julia plot_parallel.jl --main_dir "$main_dir" --event_thre $event_thre
 
 #julia run_7_t150.jl --T 2000 --dir_name_in "/gpfs/data/doiron-lab/draco/results_nn/crazy" --c_noise 0.01 --sigma_noise 1.0 --event_thre 0.8 --large_peak_mean 5 --peak_ratio 8000 --ie_sign false --ee_sign false
 
+#julia plot_parallel.jl --main_dir "/gpfs/data/doiron-lab/draco/results_nn/exp_8851278" --event_thre 0.8

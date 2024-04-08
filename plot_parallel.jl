@@ -5,6 +5,9 @@ include("sim_7_t150.jl")
 using JLD2
 using Measures
 using DSP 
+using CSV
+using DataFrames
+
 
 function average_correlations(main_dir::String, file_name::String)
     total_corr = Dict()
@@ -137,8 +140,8 @@ function load_and_merge_data(main_dir::String)
                     end
 
                     if maximum(e_data) > 30
-                        println("e_data",e_data)
-                        println("skiping")
+                        #println("e_data",e_data)
+                        #println("skiping")
                         continue
                     end
 
@@ -160,7 +163,7 @@ end
 
 
 e_rates_merged, i_rates_merged = load_and_merge_data(main_dir)
-println("e_rates_merged",e_rates_merged)
+#println("e_rates_merged",e_rates_merged)
 @save joinpath(main_dir, "merged_e_rates.jld2") e_rates_merged
 @save joinpath(main_dir, "merged_i_rates.jld2") i_rates_merged
 
@@ -245,6 +248,9 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
     squared_activity = Vector{Float64}()
     count = 0
 
+    
+    p = plot(size=(800, 600), xlabel="Time (ms)", ylabel="Rate", title="Raw Neural Activity")
+    save_list =[]
     for sub_dir in readdir(main_dir, join=true) 
         if isdir(sub_dir) && !(sub_dir in skippable_directories)
             file_path = joinpath(sub_dir, file_name)
@@ -262,19 +268,24 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                 raw_activity = raw_activity_data[key]
                 
                 # Filter the activities in raw_activity, discard if length > max_length
-                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
                  
   
                 #skip the current iteration of the loop iterating through subdirectories if any sublist in filtered_activity contains a value greater than 30. 
                 if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
-                    println("skiping")
+                    #println("skiping")
                     continue # Skip this iteration if the condition is met
                 end
 
-
+                #plot all the activities on a same plot and save it
+                
                 for activity in filtered_activity
+
+
+
  
                     if length(total_activity) < length(activity)
+                        
                         println("!!!!")
                         print(length(total_activity))
                         print(length(activity))
@@ -286,6 +297,10 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                         squared_activity[(end - length(activity) + 1):end] .= 0.0
                     end
 
+                    #plot to p
+                    plot!(p, 0:5:(length(activity) - 1) * 5, activity, label="Trial $count", legend=false)
+                    push!(save_list,activity)
+
                     # Sum up activities and squared activities
                     for i in 1:length(activity)
                         total_activity[i] += activity[i]
@@ -293,10 +308,34 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                     end
                     count += 1
                 end
+                
             end
+            
             end
         end
+        
     end
+
+    if file_name == "e_rate_raw_after_peak.jld2"
+        println(save_list)
+        savefig(p, joinpath(main_dir, "e_raw_activity_plot.png"))
+
+        
+        csv_file_path=joinpath(main_dir, "all_raw_activities.csv")
+
+        open(csv_file_path, "w") do file
+            for list in save_list
+                # Join the elements of the list into a comma-separated string and write to the file
+                write(file, join(list, ",") * "\n")
+            end
+        end
+        
+
+        
+    end
+
+    
+    
 
     # Calculate mean and standard deviation
     mean_activity = count > 0 ? total_activity ./ count : total_activity
@@ -314,7 +353,7 @@ end
 # Function to plot average raw activities with error ribbons
 function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, avg_i_activity, std_i_activity, output_file::String)
     println("plotting")
-    println("avg_e_activity",avg_e_activity)
+    #println("avg_e_activity",avg_e_activity)
     time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
     
     left_margin = 20mm
@@ -383,16 +422,20 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
 
 
 
-                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
 
                 if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
-                    println("skiping")
+                    #println("skiping")
                     continue # Skip this iteration if the condition is met
                 end
 
+                
+
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)
-                    psd = periodogram(activity,fs=200)
+                    println(activity)
+                    activity_r = activity[1:end] #remove the first 20 values
+                    psd = periodogram(activity_r,fs=200)
                     #print(psd)
                     
 
@@ -429,6 +472,12 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
     p2 = plot(size=(800, 600), xlabel="Frequency (Hz)", ylabel="Mean Normalized Power (0-1)", title="Mean Normalized Power Spectral Density with STD",fillalpha=0.2,color="red")
     plot!(p2, first(all_psds).freq, mean_psd, ribbon=std_psd, label="Mean PSD", legend=false)
     savefig(p2, output_file_2)
+    #save the data for plotting for the furture use
+    @save joinpath(main_dir, "all_psds.jld2") all_psds
+    @save joinpath(main_dir, "mean_psd.jld2") mean_psd
+    @save joinpath(main_dir, "std_psd.jld2") std_psd
+
+
 
 
 end
@@ -437,10 +486,12 @@ end
 #compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png")) 
 #compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"))
 println("computing psd for e")
-println("file_e",file_e)
+#println("file_e",file_e)
 compute_and_plot_psd(main_dir, file_e, max_trial_length,joinpath(main_dir, "power_spectra_e.png"),joinpath(main_dir, "power_spectra_e_mean.png")) 
 
 compute_and_plot_psd(main_dir, file_i, max_trial_length,joinpath(main_dir, "power_spectra_i.png"),joinpath(main_dir, "power_spectra_i_mean.png"))
+
+
 
 function convert_to_2d_matrix(sorted_psd_matrix)
     if isempty(sorted_psd_matrix)
@@ -480,17 +531,18 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
 
-                filtered_activity = filter(a -> 61 <= length(a) <= 61, raw_activity)
+                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
 
                 if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
-                    println("skiping")
+                    #println("skiping")
                     continue # Skip this iteration if the condition is met
                 end
                 
                 for activity in filtered_activity
                     # Calculate Power Spectral Density (PSD)
                     #println(activity)
-                    psd = periodogram(activity, fs=200)
+                    activity_r = activity[1:end] #remove the first 20 values
+                    psd = periodogram(activity_r, fs=200)
                     #psd_db = 10 * log10.(psd.power)
                     #push!(psd_matrix, psd_db)
                     

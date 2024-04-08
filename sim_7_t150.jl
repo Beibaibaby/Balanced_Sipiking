@@ -223,9 +223,9 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             
            #gaussian_noise_global = sqrt(c_noise) * scale_noise * randn() * sigma_noise * dt
 
-           large_peak_mean = 5.0/taue
+           large_peak_mean = 5.4/taue
            small_variance = sigma_noise*0.01
-           large_variance = sigma_noise*0.1
+           large_variance = sigma_noise*0.005
            #peak_ratio = 2000
            
            #longer noise or not

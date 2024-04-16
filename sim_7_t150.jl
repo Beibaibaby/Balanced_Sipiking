@@ -240,7 +240,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
               println("large_noise_last is",large_noise_last)
             else
                 if record_kick != []
-                    if abs(ti - record_kick[end]) < 300
+                    if abs(ti - record_kick[end]) < 800 #800 
                                 #println("ti is",ti)
                                 #println("record_kick is",record_kick[end])
                                 

@@ -106,7 +106,7 @@ function run_experiment(;
     use_init_weights, 
     init_weights
 )
-        
+        println(f_ie)
         doplot = true
         do_v_corr = false
         do_repeat_v_corr=false
@@ -120,6 +120,7 @@ function run_experiment(;
          
         timestamp = Dates.now()
         timestamp_str = Dates.format(timestamp, "yyyy-mm-dd_HH-MM-SS")
+        
 
         # These codes tell us which machine we are using 
         if env == 1 
@@ -166,6 +167,7 @@ function run_experiment(;
             @save "/gpfs/data/doiron-lab/draco/weights_$timestamp_str.jld2" weights_initial
         end
 
+
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
         overall_mean_rate_I = mean(1000 * ns[(params.Ne+1):Ncells] / params.T)
 
@@ -186,67 +188,12 @@ function run_experiment(;
 
                 # Parameters for sliding window
                 window_size = 25  # in ms
-                step_size = 5     # in ms
-
-                if add_noise
-                    
-                    neighborhood_size = 2
-                    
-                    times_modified = times #remove_spikes_near_kicks(times, record_kick, neighborhood_size)
-                    println("kick time is")
-                    println(record_kick)
-                    #println("times")
-                    #println(times[1:50,:])
-                    #println("times motified")
-                    #println(times_modified[1:50,:])
-                    
-                    e_rate_cons = compute_sliding_rate(times_modified[1:params.Ne, :], window_size, step_size, params.T)
-                    i_rate_cons = compute_sliding_rate(times_modified[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
-
-                    
-                    win_buff = 450
-                    buffer_before=50
-                    #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
-                    #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
-                    
-                    # if kick_record is non-empty, then we compute the average activity post-kick
-                    # condition check for non-empty kick_record
-                    if record_kick != []
-                        e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_cons, record_kick, win_buff, step_size, params.T)
-                        i_rate_after_peak = compute_average_activity_post_kick_2(i_rate_cons, record_kick, win_buff, step_size, params.T)
-                        print("e_rate_after_peak is", e_rate_after_peak)
-                        e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
-                        i_rate_raw_after_peak=collect_raw_activity_clips(i_rate_cons, record_kick, buffer_before, win_buff, step_size, T)
-
-                        println("events average for E")
-                        println(e_rate_after_peak)
-                        println("events average for I")
-                        println(i_rate_after_peak)
-
-            
-
-                        @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
-                        @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
-                        @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
-                        #println("average of events raw for E", mean(e_rate_raw_after_peak))
-                        println("events raw for E", e_rate_raw_after_peak)
-                        @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
-                
-
-                        plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                        plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
-                        savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
-                        savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
-                    end
-                end 
+                step_size = 0.1  #used to be 5   # in ms
 
                 e_rate = compute_sliding_rate(times[1:params.Ne, :], window_size, step_size, params.T)
                 i_rate = compute_sliding_rate(times[(params.Ne+1):Ncells, :], window_size, step_size, params.T)
 
                 
-                @save joinpath(dir_name, "e_rate.jld2") e_rate
-                @save joinpath(dir_name, "i_rate.jld2") i_rate
-
                 #compute avg_E_rate, which is the average rate of each e neuron
                 T_seconds = T / 1000
 
@@ -287,6 +234,80 @@ function run_experiment(;
                 legend=false, color=:blue,lw=0)
 
                 savefig(joinpath(dir_name, "sorted_average_rate_inhibitory_neurons_bar.png"))
+
+                # Compute the time values based on window_size and step_size
+                n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
+                #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
+                time_values = [i * step_size + window_size  for i in 1:n_steps]
+                
+                mask = trues(params.Ne)  # Start with all true
+                for neuron_index in top_n_e_neurons
+                                    mask[neuron_index] = false  # Set to false for neurons to exclude
+                end
+                
+                timek=times[1:params.Ne, :]
+                
+                times_adjusted = timek[mask, :]
+                
+                # Now calculate the sliding rate for the remaining excitatory neurons
+                e_rate_removed = compute_sliding_rate(times_adjusted, window_size, step_size, params.T)
+                e_rate=e_rate_removed
+                
+                @save joinpath(dir_name, "e_rate.jld2") e_rate
+                @save joinpath(dir_name, "i_rate.jld2") i_rate
+                
+
+                if add_noise
+                    
+                    neighborhood_size = 2
+                    
+                    times_modified = times_adjusted #remove_spikes_near_kicks(times, record_kick, neighborhood_size)
+                    println("kick time is")
+                    println(record_kick)
+                    #println("times")
+                    #println(times[1:50,:])
+                    #println("times motified")
+                    #println(times_modified[1:50,:])
+                    
+
+                    
+                    win_buff = 900 #used to be 450
+                    buffer_before=300 #used to be 50
+                    #e_rate_after_peak = compute_average_activity_post_kick(times_modified[1:params.Ne, :], record_kick, win_buff,T)
+                    #i_rate_after_peak = compute_average_activity_post_kick(times_modified[(params.Ne+1):Ncells, :], record_kick, win_buff,T)
+                    
+                    # if kick_record is non-empty, then we compute the average activity post-kick
+                    # condition check for non-empty kick_record
+                    if record_kick != []
+                        e_rate_after_peak = compute_average_activity_post_kick_2(e_rate_removed, record_kick, win_buff, step_size, params.T)
+                        i_rate_after_peak = compute_average_activity_post_kick_2(i_rate, record_kick, win_buff, step_size, params.T)
+                        print("e_rate_after_peak is", e_rate_after_peak)
+                        e_rate_raw_after_peak=collect_raw_activity_clips(e_rate_removed, record_kick, buffer_before, win_buff, step_size, T)
+                        i_rate_raw_after_peak=collect_raw_activity_clips(i_rate, record_kick, buffer_before, win_buff, step_size, T)
+
+                        println("events average for E")
+                        println(e_rate_after_peak)
+                        println("events average for I")
+                        println(i_rate_after_peak)
+
+            
+
+                        @save joinpath(dir_name, "e_rate_after_peak.jld2") e_rate_after_peak
+                        @save joinpath(dir_name, "i_rate_after_peak.jld2") i_rate_after_peak
+                        @save joinpath(dir_name, "e_rate_raw_after_peak.jld2") e_rate_raw_after_peak
+                        #println("average of events raw for E", mean(e_rate_raw_after_peak))
+                        println("events raw for E", e_rate_raw_after_peak)
+                        @save joinpath(dir_name, "i_rate_raw_after_peak.jld2") i_rate_raw_after_peak
+                
+
+                        plot_ef = plot(e_rate_after_peak, title = "Excitatory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                        plot_if = plot(i_rate_after_peak, title = "Inhibitory Rate After Peak", xlabel = "Index", ylabel = "Rate", legend = false)
+                        savefig(plot_ef, joinpath(dir_name, "e_rate_after_peak_plot.png"))
+                        savefig(plot_if, joinpath(dir_name, "i_rate_after_peak_plot.png"))
+                    end
+                end 
+
+
                 if corr_sign
                     if any(x -> x > 150, e_rate)
                         println("Element in e_rate greater than 150 found. Exiting script.")
@@ -300,22 +321,6 @@ function run_experiment(;
                     end
                 end
 
-                # Compute the time values based on window_size and step_size
-                n_steps = length(e_rate)  # or length(i_rate), assuming they have the same length
-                #time_values = [i * step_size + (window_size / 2) for i in 1:n_steps]
-                time_values = [i * step_size + window_size  for i in 1:n_steps]
-
-                mask = trues(params.Ne)  # Start with all true
-                for neuron_index in top_n_e_neurons
-                    mask[neuron_index] = false  # Set to false for neurons to exclude
-                end
-
-                timek=times[1:params.Ne, :]
-
-                times_adjusted = timek[mask, :]
-
-                # Now calculate the sliding rate for the remaining excitatory neurons
-                e_rate_removed = compute_sliding_rate(times_adjusted, window_size, step_size, params.T)
 
 
                 # Add a code to detect low rate or not 
@@ -329,13 +334,7 @@ function run_experiment(;
                         plot!(time_values, i_rate, label="Inhibitory", lw=5, linecolor=:deepskyblue2,left_margin=plot_margin,bottom_margin=plot_margin)
                     end 
 
-                    if low_plot # this parameter controls whether to focus on the zoom in low activity
-                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean", ylim=(0,5))
-                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
-                    else
-                        p2_cons = plot(time_values, e_rate_cons, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean")
-                        plot!(time_values, i_rate_cons, label="Inhibitory", lw=2, linecolor=:deepskyblue2, left_margin=plot_margin)
-                    end
+
 
                     if low_plot ##this para control whether focus on the zoom in low activity
                         p2_removed = plot(time_values, e_rate_removed, xlabel="Time (ms)", ylabel="Firing rate (Hz)", label="Excitatory", lw=2, linecolor=:red, size=plot_size, title="d_ee=$d_ee f_ee=$f_ee d_ie=$d_ie f=$f_ie Noise=$scale_noise sigma=$sigma_noise c_noise=$c_noise event_thre=$event_thre p_ratio=$peak_ratio large_p_mean=$large_peak_mean" , ylim=(0,5))
@@ -402,10 +401,7 @@ function run_experiment(;
 
 
                 
-                if add_noise 
-                   fig_filename_cons = "$dir_name/plot_FR_cons_$timestamp_str.png"
-                   savefig(p2_cons, fig_filename_cons)
-                end
+
 
 
                 # Generate scaled x-values
@@ -943,7 +939,7 @@ env = parse(Int, get_arg("--env", "3"))
 d_ee = parse(Float64, get_arg("--d_ee", "0.24"))
 f_ee = parse(Float64, get_arg("--f_ee", "0.85"))
 d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
-f_ie = parse(Float64, get_arg("--f_ie", "0.0"))
+f_ie = parse(Float64, get_arg("--f_ie", "0.00"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 stim_duration= parse(Int, get_arg("--stim_duration", "0"))

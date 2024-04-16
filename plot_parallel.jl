@@ -268,7 +268,7 @@ function average_raw_activity_and_std(main_dir::String, file_name::String, max_l
                 raw_activity = raw_activity_data[key]
                 
                 # Filter the activities in raw_activity, discard if length > max_length
-                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
+                filtered_activity = filter(a -> 12001 <= length(a) <= 12001, raw_activity)
                  
   
                 #skip the current iteration of the loop iterating through subdirectories if any sublist in filtered_activity contains a value greater than 30. 
@@ -357,7 +357,7 @@ function plot_avg_raw_activity(time_step::Int, avg_e_activity, std_e_activity, a
     time_axis = 0:time_step:(length(avg_e_activity) - 1) * time_step
     
     left_margin = 20mm
-    p = plot(size=(800, 400), left_margin=left_margin, ylim=(0, 12), bottom_margin=5mm)  # Adjust bottom margin as needed
+    p = plot(size=(800, 400), left_margin=left_margin, ylim=(0, 15), bottom_margin=5mm)  # Adjust bottom margin as needed
 
     ribbon_alpha = 0.1
     # Plot I rates with error ribbon
@@ -422,7 +422,7 @@ function compute_and_plot_psd(main_dir::String, file_name::String, max_length::I
 
 
 
-                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
+                filtered_activity = filter(a -> 12001 <= length(a) <= 12001, raw_activity)
 
                 if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
                     #println("skiping")
@@ -531,7 +531,7 @@ function compute_and_plot_psd_heatmap(main_dir::String, file_name::String, outpu
                 key = file_name == "e_rate_raw_after_peak.jld2" ? "e_rate_raw_after_peak" : "i_rate_raw_after_peak"
                 raw_activity = raw_activity_data[key]
 
-                filtered_activity = filter(a -> 101 <= length(a) <= 101, raw_activity)
+                filtered_activity = filter(a -> 12001 <= length(a) <= 12001, raw_activity)
 
                 if any(sublist -> any(value -> value > 30, sublist), filtered_activity)
                     #println("skiping")

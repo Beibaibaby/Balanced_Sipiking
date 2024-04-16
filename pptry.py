@@ -6,13 +6,13 @@ import pandas as pd
 def load_and_process_csv(csv_file_path):
     df = pd.read_csv(csv_file_path, header=None)
     matrix = np.matrix(df.values)
-    matrix = matrix[:, 5:-1]
+    matrix = matrix[:, :]
     return matrix
 
-def compute_psd(matrix, fs=1/0.005):
+def compute_psd(matrix, fs=2000):
     nperseg = matrix.shape[1]
     psds = []
-
+    print(matrix.shape)
     for row in matrix:
         frequencies, power_density = welch(row, fs=fs, nperseg=nperseg, scaling='density')
         normalized_power_density = power_density / np.sum(power_density)
@@ -29,12 +29,12 @@ def compute_psd(matrix, fs=1/0.005):
     
     psd_mean = np.mean(psds, axis=0)
     psd_std = np.std(psds, axis=0)
-    psd_mean = psd_mean/np.max(psd_mean)
-    psd_std = psd_std/np.max(psd_mean)
+    #psd_mean = psd_mean/np.max(psd_mean)
+    #psd_std = psd_std/np.max(psd_mean)
 
     return frequencies, psd_mean, psd_std, psds
-csv_file_path_1 = '/gpfs/data/doiron-lab/draco/results_nn/exp_8905776/all_raw_activities.csv'
-csv_file_path_2 = '/gpfs/data/doiron-lab/draco/results_nn/exp_8905827/all_raw_activities.csv'
+csv_file_path_1 = '/gpfs/data/doiron-lab/draco/results_nn/exp_8957510/all_raw_activities.csv'
+csv_file_path_2 = '/gpfs/data/doiron-lab/draco/results_nn/exp_8957562/all_raw_activities.csv'
 
 # Load, process, and compute PSD for both datasets
 matrix_1 = load_and_process_csv(csv_file_path_1)

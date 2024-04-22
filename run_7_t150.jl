@@ -167,6 +167,14 @@ function run_experiment(;
             @save "/gpfs/data/doiron-lab/draco/weights_$timestamp_str.jld2" weights_initial
         end
 
+        if add_noise == false
+
+            @save joinpath(dir_name, "E_input.jld2") E_input
+            @save joinpath(dir_name, "I_input.jld2") I_input
+        
+        end
+
+
 
         overall_mean_rate_E =  mean(1000 * ns[1:params.Ne] / params.T)
         overall_mean_rate_I = mean(1000 * ns[(params.Ne+1):Ncells] / params.T)
@@ -943,7 +951,7 @@ f_ie = parse(Float64, get_arg("--f_ie", "0.00"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
 stim_duration= parse(Int, get_arg("--stim_duration", "0"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "200"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "600"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))

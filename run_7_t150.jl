@@ -947,10 +947,10 @@ env = parse(Int, get_arg("--env", "3"))
 d_ee = parse(Float64, get_arg("--d_ee", "0.24"))
 f_ee = parse(Float64, get_arg("--f_ee", "0.85"))
 d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
-f_ie = parse(Float64, get_arg("--f_ie", "0.00"))
+f_ie = parse(Float64, get_arg("--f_ie", "0.24"))
 
 stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
-stim_duration= parse(Int, get_arg("--stim_duration", "0"))
+stim_duration= parse(Int, get_arg("--stim_duration", "80"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "600"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))

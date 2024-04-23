@@ -284,12 +284,14 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)
                 synInput += stimstr_2
             end
+
+            gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
+            synInput += gaussian_noise_local
             
 
             if add_noise
 
-               gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
-               synInput += gaussian_noise_local
+
 
                if ci in top_n_e_neurons
                 synInput += gaussian_noise_global

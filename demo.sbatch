@@ -11,5 +11,5 @@
 #SBATCH --error=/gpfs/data/doiron-lab/draco/out/demo_job.%j.err
 
 # Run the Julia script
-julia run_7_t150.jl --T 2000 --dir_name_in “/gpfs/data/doiron-lab/draco/results_corr/” --ie_sign true --ee_sign true --add_noise false --stim_duration 80 --stimstr 0.0
+julia run_7_t150.jl --T 2000 --dir_name_in "/gpfs/data/doiron-lab/draco/results_corr/0.0-local2" --ie_sign true --ee_sign true --add_noise false --stimstr 0.0
 #5.4

@@ -79,6 +79,9 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     muimin = 1
     muimax = 1.05
 
+
+
+
     vre = 0.0
     threshe = 1
     threshi = 1
@@ -109,7 +112,9 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
         mu[(Ne + 1):Ncells] .= (muimax - muimin) .* rand(Ni) .+ muimin
 
     end
-
+    ##########
+    #mu = zeros(Ncells)
+    ##########
     thresh[1:Ne] .= threshe
     thresh[(Ne + 1):Ncells] .= threshi
 
@@ -161,8 +166,12 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     v_history = zeros(Ncells, Nsteps)  # Nsteps because we're saving at each time step, not just spikes
     E_input=zeros(Ncells, Nsteps) 
     I_input=zeros(Ncells, Nsteps)
+    E_input_raw=zeros(Ncells, Nsteps) 
+    I_input_raw=zeros(Ncells, Nsteps)
+    
     forwardInputsE = zeros(Ncells)
     forwardInputsI = zeros(Ncells)
+
     forwardInputsEPrev = zeros(Ncells)
     forwardInputsIPrev = zeros(Ncells)
 
@@ -261,12 +270,16 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             xedecay[ci] += -dt * xedecay[ci] / tauedecay + forwardInputsEPrev[ci]
             xirise[ci] += -dt * xirise[ci] / taurise + forwardInputsIPrev[ci]
             xidecay[ci] += -dt * xidecay[ci] / tauidecay + forwardInputsIPrev[ci]
-   
+            
+            
+
             #synInput = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             synInput_E = (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise)
             synInput_I = (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
             E_input[ci, ti] = synInput_E #* 0.1
             I_input[ci, ti] = synInput_I #* 0.1
+            E_input_raw[ci, ti] = forwardInputsEPrev[ci]
+            I_input_raw[ci, ti] = forwardInputsIPrev[ci]
            
 
             synInput = synInput_E+synInput_I # (xedecay[ci] - xerise[ci]) / (tauedecay - tauerise) + (xidecay[ci] - xirise[ci]) / (tauidecay - taurise)
@@ -286,8 +299,10 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             end
 
             gaussian_noise_local = sqrt(1-c_noise) * randn() * sigma_noise * dt
-            synInput += gaussian_noise_local
             
+            ##########
+            synInput += gaussian_noise_local
+            ###########
 
             if add_noise
 
@@ -352,7 +367,7 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
        println("no over max")
     end
     
-    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial
+    return times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track , weights_IE_mean_history, weights_EE_mean_history, weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial, E_input_raw, I_input_raw
 end
 
 function load_data_from_jld2(file_path, data_key)

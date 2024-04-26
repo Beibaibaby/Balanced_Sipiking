@@ -152,8 +152,8 @@ function run_experiment(;
         #store it
         #run the stimulus
         #times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights = sim_old()
-        global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history
-        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial=sim_dynamic(
+        global times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,E_input_raw,I_input_raw
+        times, ns, Ne, Ncells, T, v_history, E_input, I_input, weights, weights_D_ee_track, weights_F_ee_track,weights_IE_mean_history,weights_EE_mean_history,weights_D_ie_track, weights_F_ie_track, record_kick, weights_initial,E_input_raw,I_input_raw=sim_dynamic(
             params.Ne,params.Ni,params.T,params.taue,params.taui,params.pei,params.pie,params.pii,params.pee,params.K,
             params.stimstr_para,params.Nstim,params.jie_para,params.jei_para,params.jii_para,params.jee_para,
             params.stim_duration,params.stim_start_time,params.ie_sign,params.ee_sign,params.corr_flag,
@@ -171,6 +171,11 @@ function run_experiment(;
 
             @save joinpath(dir_name, "E_input.jld2") E_input
             @save joinpath(dir_name, "I_input.jld2") I_input
+            @save joinpath(dir_name,"v_history.jld2") v_history
+            @save joinpath(dir_name, "times.jld2") times
+            @save joinpath(dir_name, "ns.jld2") ns
+            @save joinpath(dir_name, "E_input_raw.jld2") E_input_raw
+            @save joinpath(dir_name, "I_input_raw.jld2") I_input_raw
         
         end
 

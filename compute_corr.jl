@@ -1,7 +1,7 @@
 using FileIO, JLD2, Plots, StatsBase, Statistics
 
 ENV["GKSwstype"] = "100"
-
+println("starting")
 function sliding_window_average_matrix(data, window_size, step_size)
     n_neurons, total_time = size(data)
     # Calculate the number of output points based on window size and step size
@@ -168,3 +168,25 @@ cell_indices = [5, 10]  # Ensure these are not in skip_indices and adjust as nec
 
 # Save the figure
 #savefig("Voltage_Traces_comparison.png")
+
+function average_input_correlation(E_input, I_input, neuron_indices, time_indices)
+    correlations = Float64[]
+    for neuron in neuron_indices
+        cor = Statistics.cor(E_input[neuron, time_indices], I_input[neuron, time_indices])
+        push!(correlations, cor)
+    end
+    mean(correlations)
+end
+
+
+# Define neuron indices, ensuring they are not skipped
+neuron_indices = setdiff(1:size(E_input_non_event, 1), skip_indices)  # Adjust as per neuron index range and skip list
+
+# Define time indices for correlation analysis
+time_window_start = 1000  # Adjust start time as needed
+time_window_end = 2200    # Adjust end time as needed
+time_indices = Int(round(time_window_start/step_size)):Int(round(time_window_end/step_size))
+
+E_I_correlation = average_input_correlation(E_input_non_event, I_input_non_event, neuron_indices, time_indices)
+
+println("Correlation E-I nonevent: $E_I_correlation")

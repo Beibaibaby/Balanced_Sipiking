@@ -176,8 +176,12 @@ function run_experiment(;
             @save joinpath(dir_name, "ns.jld2") ns
             @save joinpath(dir_name, "E_input_raw.jld2") E_input_raw
             @save joinpath(dir_name, "I_input_raw.jld2") I_input_raw
-        
+        else
+            @save joinpath(dir_name, "times.jld2") times
+            @save joinpath(dir_name, "ns.jld2") ns
         end
+
+
 
 
 

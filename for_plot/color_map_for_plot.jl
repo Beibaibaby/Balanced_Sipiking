@@ -111,7 +111,7 @@ function generate_theta_colormap(d_values, f_values, A, tau_d, tau_f, dt, T, ini
         end
     end
 
-    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="d", ylabel="f", title=" ", color=:tab20c,grid=false,dpi=300,size=(300,300))
+    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="d", ylabel="f", title=" ", color=:tab20c,grid=false,dpi=600,size=(300,300))
     savefig(heatmap_plot, filename)  # Save the plot to a file
 
 end

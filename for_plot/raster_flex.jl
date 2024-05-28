@@ -24,7 +24,7 @@ plot_margin = 5mm
 # Generate the raster plot
 p = plot(size=plot_size, xlim=(0, 2500), ylim=(0, 4000), xlabel="Time (ms)", ylabel="Neuron", dpi=500,
          left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin,
-         xtickfont=font(12), ytickfont=font(12), legendfontsize=12, titlefontsize=12, xlabelfontsize=12, ylabelfontsize=12)
+         xtickfont=font(10), ytickfont=font(10), legendfontsize=10, titlefontsize=10, xlabelfontsize=10, ylabelfontsize=10)
 
 for ci in 1:4000
     vals = times[ci, 1:ns[ci]]

@@ -58,33 +58,32 @@ e_rate_filtered = e_rate_smooth[filtered_indices]
 i_rate_filtered = i_rate_smooth[filtered_indices]
 
 # Plot size and margin settings
-plot_size = (1200, 600)
-plot_margin = 10mm
+plot_size = (1000, 400)
+plot_margin = 5mm
 
 # Generate the plot
 p2 = plot(time_values_filtered, e_rate_filtered,
     xlabel = "Time (ms)",
     ylabel = "Firing rate (Hz)",
     label = "Excitatory",
-    lw = 3,
+    lw = 2,
     linecolor = red_color,
     size = plot_size,
-    xtickfont = font(18),
-    ytickfont = font(18),
-    legendfontsize = 16,
-    titlefontsize = 16,
-    xlabelfontsize = 18,
-    ylabelfontsize = 18,
-    left_margin = plot_margin,
-    bottom_margin = plot_margin,
+    xtickfont = font(12),
+    ytickfont = font(12),
+    legendfontsize = 12,
+    titlefontsize = 12,
+    xlabelfontsize = 12,
+    ylabelfontsize = 12,
     grid = false,
     ylim = (0, 15),  # Set y-axis limits
     dpi=500,
-    foreground_color_legend=nothing)
+    foreground_color_legend=nothing,
+    left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
 
 plot!(time_values_filtered, i_rate_filtered,
     label = "Inhibitory",
-    lw = 3,
+    lw = 2,
     linecolor = blue_color,
     foreground_color_legend=nothing,
     grid = false)

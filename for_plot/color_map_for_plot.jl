@@ -1,6 +1,6 @@
 ENV["GKSwstype"] = "100"  # Use the off-screen GKS terminal to aviod running messages
 using Plots
-
+using Measures
 # Include your existing functions here: simulate_LIF_neuron_fixed_F, generate_spike_train
 function simulate_LIF_neuron(A, d, f, tau_d, tau_f, dt, T, S_input)
     τ_m = 10.0       
@@ -111,7 +111,13 @@ function generate_theta_colormap(d_values, f_values, A, tau_d, tau_f, dt, T, ini
         end
     end
 
-    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="d", ylabel="f", title=" ", color=:tab20c,grid=false,dpi=600,size=(300,300))
+    # Create the heatmap plot with adjusted label font sizes
+    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="SRD(d)", ylabel="SRF(f)", 
+    title=" ", color=:tab20c, grid=false, dpi=600, size=(300,300),
+    xaxis = (font(8), "SRD(d)"), # Adjust font size for x-axis label
+    yaxis = (font(8), "SRF(f)"),right_margin=3mm)  # Adjust font size for y-axis label
+
+    #for spike-recruited facilitation
     savefig(heatmap_plot, filename)  # Save the plot to a file
 
 end

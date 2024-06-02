@@ -179,6 +179,7 @@ function run_experiment(;
         else
             @save joinpath(dir_name, "times.jld2") times
             @save joinpath(dir_name, "ns.jld2") ns
+            @save joinpath(dir_name, "record_kick.jld2") record_kick
         end
 
 
@@ -231,6 +232,7 @@ function run_experiment(;
 
                 @save joinpath(dir_name, "top_n_e_neurons_noise.jld2") top_n_e_neurons
                 @save joinpath(dir_name, "top_n_i_neurons_noise.jld2") top_n_i_neurons
+                
 
                 # Sort the average rates in descending order
                 sorted_avg_E_rate = sort(avg_E_rate, rev=true)
@@ -258,6 +260,7 @@ function run_experiment(;
                 time_values = [i * step_size + window_size  for i in 1:n_steps]
                 
                 mask = trues(params.Ne)  # Start with all true
+                top_n_e_neurons = load_data_from_jld2("/gpfs/data/doiron-lab/draco/results_150_old/d_ee=0.24+f_ie=0.0+d_ie=0.24+2024-03-20_12-52-39/top_n_e_neurons_noise.jld2", "top_n_e_neurons")
                 for neuron_index in top_n_e_neurons
                                     mask[neuron_index] = false  # Set to false for neurons to exclude
                 end

@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=draco_test
 #SBATCH --account=dracoxu
-#SBATCH --partition=tier2q
+#SBATCH --partition=tier1q
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=06:30:30
-#SBATCH --cpus-per-task=10
+#SBATCH --time=04:30:30
+#SBATCH --cpus-per-task=5
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/out/a1.%A_%a.txt
 #SBATCH --error=/gpfs/data/doiron-lab/draco/out/a1.%A_%a.err
-#SBATCH --array=1-50%50
+#SBATCH --array=1-150%50
 
 # Use SLURM_ARRAY_JOB_ID as the identifier
 ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}

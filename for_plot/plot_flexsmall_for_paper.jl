@@ -24,6 +24,8 @@ i_rate_file = joinpath(directory, "i_rate.jld2")
 e_rate = load(e_rate_file, "e_rate")
 i_rate = load(i_rate_file, "i_rate")
 
+
+
 # Ensure e_rate and i_rate have the same length
 n_steps = length(e_rate)
 

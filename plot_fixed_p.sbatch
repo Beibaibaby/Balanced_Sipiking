@@ -9,7 +9,7 @@
 #SBATCH --mem=100gb
 #SBATCH --output=/gpfs/data/doiron-lab/draco/out/a1.%A_%a.out
 #SBATCH --error=/gpfs/data/doiron-lab/draco/out/a1.%A_%a.err
-#SBATCH --array=1-30%30
+#SBATCH --array=1-150%50
 
 # Use SLURM_ARRAY_JOB_ID as the identifier
 ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}

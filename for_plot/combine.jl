@@ -16,7 +16,9 @@ ENV["GKSwstype"] = "100"
 println("starting")
 
 # Define the directory and file paths
-directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10329684/17_good"
+#directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10329684/17_good"
+#directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10549787/113"
+directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10549787/50"
 e_rate_file = joinpath(directory, "e_rate.jld2")
 i_rate_file = joinpath(directory, "i_rate.jld2")
 times_file = joinpath(directory, "times.jld2")
@@ -27,6 +29,7 @@ e_rate = load(e_rate_file, "e_rate")
 i_rate = load(i_rate_file, "i_rate")
 times = load(times_file, "times")
 ns = load(ns_file, "ns")
+
 
 # Ensure e_rate and i_rate have the same length
 n_steps = length(e_rate)
@@ -83,7 +86,7 @@ p1 = plot(time_values_filtered, i_rate_filtered,
     xlabelfontsize = 12,
     ylabelfontsize = 12,
     grid = false,
-    ylim = (0, 15),  # Set y-axis limits
+    ylim = (0, 10),  # Set y-axis limits
     dpi=500,
     foreground_color_legend=nothing,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
@@ -98,7 +101,7 @@ plot!(p1, time_values_filtered, e_rate_filtered,
 # Create the raster plot
 p2 = plot(size=(1000, 400), xlim=(0, 2500), ylim=(0, 4000), xlabel="Time (ms)", ylabel="Neuron", dpi=500,
          left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin,
-         xtickfont=font(12), ytickfont=font(12), legendfontsize=12, titlefontsize=12, xlabelfontsize=12, ylabelfontsize=12)
+         xtickfont=font(12), ytickfont=font(12), legendfontsize=12, titlefontsize=12, xlabelfontsize=12, ylabelfontsize=12,grid=false)
 
 for ci in 1:4000
     vals = times[ci, 1:ns[ci]]

@@ -221,6 +221,7 @@ using Plots
 # Define custom colors
 orange = RGB(242/255, 163/255, 58/255)
 purple = RGB(134/255, 99/255, 152/255)
+#green = RGB(39/255, 197/255, 156/255)
 
 # Create the plot
 p = plot(temporal_frequencies, depression_ratios, 

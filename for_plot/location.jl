@@ -9,13 +9,13 @@ plot_margin = 5mm
 
 # Define the coordinates for the three dots
 x = [0.24, 0.24, 0.24]
-y = [0.85, 0.35, 0.24]
+y = [0.85, 0.37, 0.24]
 
 # Create the plot
 p = plot(x, y, seriestype = :scatter,
     size = plot_size,
-    xlabel = "d",
-    ylabel = "f",
+    xlabel = "SRD",
+    ylabel = "SRF",
     xticks = [0.24],  # Only show the tick for 0.24
     xlim=(0.15,0.33),
     ylim=(0,1),
@@ -27,8 +27,8 @@ p = plot(x, y, seriestype = :scatter,
     ytickfont = font(10),
     legendfontsize = 10,
     titlefontsize = 10,
-    xlabelfontsize = 10,
-    ylabelfontsize = 10,
+    xlabelfontsize = 12,
+    ylabelfontsize = 12,
     foreground_color_legend=nothing,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin,dti=500)
 

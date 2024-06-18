@@ -46,13 +46,16 @@ plot_size = (400, 350)
 plot_margin = 5mm
 blue_color = RGB(55/255, 120/255, 201/255)
 red_color = RGB(228/255, 26/255, 28/255)
+green_color = RGB(0/255, 201/255,20/255)
 
 # Load and process data for each condition
 #dir1 = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_small_10336866_true/16_true"
-dir1 ="/gpfs/data/doiron-lab/draco/results_nn/exp_flex_small_10566700/98"
-start_time1 = 0
-end_time1 = 1000
+dir1 ="/gpfs/data/doiron-lab/draco/results_nn/exp_flex_small_10567909_0.37/36"
+start_time1 = 750
+end_time1 = 1750
 time_values1, e_rate1, i_rate1 = load_and_process_data(dir1, "e_rate.jld2", "i_rate.jld2", start_time1, end_time1)
+kick_file1 = joinpath(dir1, "record_kick.jld2")
+kick_times1 = load(kick_file1, "record_kick") / 10  # Convert to milliseconds
 
 dir2 = "/gpfs/data/doiron-lab/draco/results_nn/exp_fixed_10329654/19_good/"
 start_time2 = 700
@@ -64,6 +67,8 @@ dir3="/gpfs/data/doiron-lab/draco/results_nn/exp_same_10549930/31"
 start_time3 = 1300
 end_time3 = 2300
 time_values3, e_rate3, i_rate3 = load_and_process_data(dir3, "e_rate.jld2", "i_rate.jld2", start_time3, end_time3)
+kick_file3 = joinpath(dir3, "record_kick.jld2")
+kick_times3 = load(kick_file3, "record_kick") / 10  # Convert to milliseconds
 
 # Create plots
 p1 = plot(time_values1, i_rate1,
@@ -72,7 +77,7 @@ p1 = plot(time_values1, i_rate1,
     label = "Inhibitory",
     lw = 2,
     linecolor = blue_color,
-    xlim=(0, 1000),
+    xlim=(750, 1750),
     ylim=(0, 10),
     xtickfont = font(12),
     ytickfont = font(12),
@@ -81,6 +86,14 @@ p1 = plot(time_values1, i_rate1,
     xaxis=false,
     foreground_color_legend=nothing,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
+    
+    rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+
+    for kick_time1 in kick_times1
+
+        #plot!(p1, rectangle(80,4000,kick_time1,0), fillcolor=green_color, fillalpha=0.1, seriestype=:shape, legend=false, linecolor=nothing)
+    end
+
 plot!(p1, time_values1, e_rate1,
     label = "Excitatory",
     lw = 2,
@@ -105,7 +118,8 @@ p2 = plot(time_values2, i_rate2,
     yaxis=false,
     foreground_color_legend=nothing,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
-plot!(p2, time_values2, e_rate2,
+
+    plot!(p2, time_values2, e_rate2,
     label = "Excitatory",
     lw = 2,
     linecolor = red_color,
@@ -134,7 +148,9 @@ p3 = plot(time_values3, i_rate3,
     yaxis=false,
     foreground_color_legend=nothing,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
-plot!(p3, time_values3, e_rate3,
+    
+
+    plot!(p3, time_values3, e_rate3,
     label = "Excitatory",
     lw = 2,
     linecolor = red_color,
@@ -143,6 +159,11 @@ plot!(p3, time_values3, e_rate3,
     yaxis=false,
     foreground_color_legend=nothing)
 
+    for kick_time3 in kick_times3
+        #plot!(p3, rectangle(80,4000,kick_time3,0), fillcolor=green_color, fillalpha=0.1, seriestype=:shape, label=nothing, linecolor=nothing)
+    end
+
+
 # Combine plots into a single figure with subplots
 combined_plot = plot(p1, p3, layout = @layout([a c]), size=(2*plot_size[1], plot_size[2]), link=:y,dpi=500)
 
@@ -150,8 +171,8 @@ combined_plot = plot(p1, p3, layout = @layout([a c]), size=(2*plot_size[1], plot
 directory_for_plot = "/gpfs/data/doiron-lab/draco/Balanced_Sipiking/plots_for_paper"
 
 # Save the combined plot as SVG, PDF, and PNG
-savefig(combined_plot, joinpath(directory_for_plot, "combined_2.svg"))
-savefig(combined_plot, joinpath(directory_for_plot, "combined_2.pdf"))
-savefig(combined_plot, joinpath(directory_for_plot, "combined_2.png"))
+savefig(combined_plot, joinpath(directory_for_plot, "combined_2_nos.svg"))
+savefig(combined_plot, joinpath(directory_for_plot, "combined_2_nos.pdf"))
+savefig(combined_plot, joinpath(directory_for_plot, "combined_2_nos.png"))
 
 println("Combined plot saved.")

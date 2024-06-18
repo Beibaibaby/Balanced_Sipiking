@@ -112,10 +112,10 @@ function generate_theta_colormap(d_values, f_values, A, tau_d, tau_f, dt, T, ini
     end
 
     # Create the heatmap plot with adjusted label font sizes
-    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="SRD(d)", ylabel="SRF(f)", 
+    heatmap_plot = heatmap(d_values, f_values, theta_matrix, xlabel="Spi.Rec.Depress.", ylabel="Spi.Rec.Facili.", 
     title=" ", color=:tab20c, grid=false, dpi=600, size=(300,300),
-    xaxis = (font(8), "SRD(d)"), # Adjust font size for x-axis label
-    yaxis = (font(8), "SRF(f)"),right_margin=3mm)  # Adjust font size for y-axis label
+    xaxis = (font(8), "Spike-Recruited Depression"), # Adjust font size for x-axis label
+    yaxis = (font(8), "Spike-Recruited Facilitation"),right_margin=3mm)  # Adjust font size for y-axis label
 
     #for spike-recruited facilitation
     savefig(heatmap_plot, filename)  # Save the plot to a file

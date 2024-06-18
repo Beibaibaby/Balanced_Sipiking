@@ -80,8 +80,6 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
     muimax = 1.05
 
 
-
-
     vre = 0.0
     threshe = 1
     threshi = 1
@@ -388,6 +386,7 @@ function bimodal_gaussian_noise(c_noise, scale_noise, sigma_noise, dt, large_pea
     if rand() < peak_ratio / (peak_ratio + 1)
         noise = rand(small_peak) * 0.001
         noise = sqrt(c_noise) * scale_noise * noise * dt
+        noise = 0
         large_noise_flag = false  # Flag for large noise not generated
         
     else

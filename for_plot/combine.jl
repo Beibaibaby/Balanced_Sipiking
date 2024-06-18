@@ -16,21 +16,20 @@ ENV["GKSwstype"] = "100"
 println("starting")
 
 # Define the directory and file paths
-#directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10329684/17_good"
-#directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10549787/113"
 directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_flex_10549787/50"
 e_rate_file = joinpath(directory, "e_rate.jld2")
 i_rate_file = joinpath(directory, "i_rate.jld2")
 times_file = joinpath(directory, "times.jld2")
 ns_file = joinpath(directory, "ns.jld2")
+kick_file = joinpath(directory, "record_kick.jld2")
 
 # Load the data from the JLD2 files
 e_rate = load(e_rate_file, "e_rate")
 i_rate = load(i_rate_file, "i_rate")
 times = load(times_file, "times")
 ns = load(ns_file, "ns")
-
-
+kick_times = load(kick_file, "record_kick") / 10  # Convert to milliseconds
+println(kick_times)
 # Ensure e_rate and i_rate have the same length
 n_steps = length(e_rate)
 
@@ -44,6 +43,7 @@ time_values = [i * step_size + window_size for i in 1:n_steps]
 # Define custom colors
 blue_color = RGB(55/255, 120/255, 201/255)
 red_color = RGB(228/255, 26/255, 28/255)
+green_color = RGB(0/255, 201/255,20/255)
 
 # Define smoothing function
 function moving_average(data, window_size)
@@ -71,6 +71,8 @@ i_rate_filtered = i_rate_smooth[filtered_indices]
 plot_size = (1000, 700)
 plot_margin = 5mm
 
+rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+
 # Create the smoothed firing rates plot
 p1 = plot(time_values_filtered, i_rate_filtered,
     xlabel = "Time (ms)",
@@ -86,23 +88,47 @@ p1 = plot(time_values_filtered, i_rate_filtered,
     xlabelfontsize = 12,
     ylabelfontsize = 12,
     grid = false,
-    ylim = (0, 10),  # Set y-axis limits
+    ylim = (0, 10.5),  # Set y-axis limits
     dpi=500,
-    foreground_color_legend=nothing,
+    foreground_color_legend=nothing,legend=true,
     left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin)
+
+
 
 plot!(p1, time_values_filtered, e_rate_filtered,
     label = "Excitatory",
     lw = 2,
     linecolor = red_color,
     foreground_color_legend=nothing,
-    grid = false)
+    grid = false,
+    legend=true)
+
+
+for kick_time in kick_times
+    plot!(p1, rectangle(80, 11, kick_time, 0), 
+        fillcolor=green_color, 
+        fillalpha=0.08, 
+        seriestype=:shape, 
+        label=nothing,   # Explicitly exclude from the legend
+        linecolor=nothing)
+end
+
+
+    # Adding rectangles to the plot without legend and border
+
 
 # Create the raster plot
 p2 = plot(size=(1000, 400), xlim=(0, 2500), ylim=(0, 4000), xlabel="Time (ms)", ylabel="Neuron", dpi=500,
          left_margin=plot_margin, right_margin=plot_margin, top_margin=plot_margin, bottom_margin=plot_margin,
-         xtickfont=font(12), ytickfont=font(12), legendfontsize=12, titlefontsize=12, xlabelfontsize=12, ylabelfontsize=12,grid=false)
+         xtickfont=font(12), ytickfont=font(12), legendfontsize=12, titlefontsize=12, xlabelfontsize=12, ylabelfontsize=12, grid=false)
 
+# Add the kick times as background rectangles
+for kick_time in kick_times
+
+    plot!(p2, rectangle(80,4000,kick_time,0), fillcolor=green_color, fillalpha=0.15, seriestype=:shape, legend=false, linecolor=nothing)
+end
+
+# Add the spike raster
 for ci in 1:4000
     vals = times[ci, 1:ns[ci]]
     y = fill(ci, length(vals))

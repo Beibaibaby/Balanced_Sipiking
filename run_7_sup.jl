@@ -13,7 +13,7 @@ using SharedArrays
 ENV["GKSwstype"] = "100"  # Use the off-screen GKS terminal to aviod running messages
 
 include("sim_7_sup.jl") # include the network simulation code
-
+#to do
 struct NetworkParameters #struct for the network parameters
     Ncells::Int
     Ne::Int

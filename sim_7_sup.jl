@@ -287,9 +287,15 @@ function sim_dynamic(Ne,Ni,T,taue,taui,pei,pie,pii,pee,K,stimstr_para,Nstim,jie_
             #    synInput += stimstr
             #end
 
-            if (ci in top_n_e_neurons) && (t > stimstart) && (t < stimend)
-               synInput += stimstr
-            end 
+            #if (ci in top_n_e_neurons) && (t > stimstart) && (t < stimend)
+            #   synInput += stimstr
+            #end 
+
+            #Here we stimulate all the E neurons
+
+            if (ci < Nstim) && (t > stimstart) && (t < stimend)
+                synInput += stimstr
+             end 
             
 
             if (ci < Nstim) && (t > stim_start_2) && (t < stim_end_2)

@@ -164,7 +164,7 @@ function run_experiment(;
         # Here, we check whether we are using existing initial weights. If not, we save the initial weights.
         if !use_init_weights  # Save only if new weights are generated
             print("no using initials")
-            @save "/gpfs/data/doiron-lab/draco/weights_$timestamp_str.jld2" weights_initial
+            @save "/gpfs/data/doiron-lab/draco/weights/weights_$timestamp_str.jld2" weights_initial
         end
 
         if add_noise == false
@@ -950,20 +950,20 @@ corr_flag = parse(Bool, get_arg("--corr_flag", "false")) ##wether compute and pl
 low_plot = parse(Bool, get_arg("--low_plot", "false")) #contronl whether manully plot a low ativity regime
 
 sigma_noise = parse(Float64, get_arg("--sigma_noise", "1.0"))
-add_noise = parse(Bool, get_arg("--add_noise", "true"))
+add_noise = parse(Bool, get_arg("--add_noise", "false"))
 scale_noise = parse(Float64, get_arg("--scale_noise", "1"))
 c_noise = parse(Float64, get_arg("--c_noise", "0.01"))
 
 env = parse(Int, get_arg("--env", "3"))
 
-d_ee = parse(Float64, get_arg("--d_ee", "0.24"))
-f_ee = parse(Float64, get_arg("--f_ee", "0.85"))
-d_ie = parse(Float64, get_arg("--d_ie", "0.24"))
-f_ie = parse(Float64, get_arg("--f_ie", "0.24"))
+d_ee = parse(Float64, get_arg("--d_ee", "0.4"))
+f_ee = parse(Float64, get_arg("--f_ee", "0.3"))
+d_ie = parse(Float64, get_arg("--d_ie", "0.25"))
+f_ie = parse(Float64, get_arg("--f_ie", "0.3"))
 
-stimstr = parse(Float64, get_arg("--stimstr", "0.0"))
-stim_duration= parse(Int, get_arg("--stim_duration", "80"))
-stim_start_time= parse(Int, get_arg("--stim_start_time", "600"))
+stimstr = parse(Float64, get_arg("--stimstr", "1.0"))
+stim_duration= parse(Int, get_arg("--stim_duration", "20"))
+stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
@@ -981,7 +981,7 @@ dir_name_in = get_arg("--dir_name_in", "/gpfs/data/doiron-lab/draco/results_150/
 
 corr_sign = parse(Bool, get_arg("--corr_sign", "false")) ##New sign for correlation
 
-use_init_weights = parse(Bool, get_arg("--use_init_weights", "true"))
+use_init_weights = parse(Bool, get_arg("--use_init_weights", "false"))
 init_weights_name = get_arg("--weights_file", "/gpfs/data/doiron-lab/draco/weights_2024-03-20_12-52-45.jld2")  # Adjust the default as needed
 
 # Initialize variable for initial weights

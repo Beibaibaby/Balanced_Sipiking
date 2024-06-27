@@ -13,7 +13,7 @@ using Distributions
 ENV["GKSwstype"] = "100"
 
 # Define the directory and file paths
-directory = "/gpfs/data/doiron-lab/draco/results_nn/exp_fixed_10329654/19_good/"
+directory = "/gpfs/data/doiron-lab/draco/results_sup/exp_sup_11095617/6"
 e_rate_file = joinpath(directory, "e_rate.jld2")
 i_rate_file = joinpath(directory, "i_rate.jld2")
 
@@ -25,7 +25,7 @@ i_rate = load(i_rate_file, "i_rate")
 n_steps = length(e_rate)
 
 # Define step size and window size
-window_size = 25
+window_size = 100
 step_size = 0.1
 
 # Generate time values
@@ -41,7 +41,7 @@ function moving_average(data, window_size)
 end
 
 # Smooth the data
-window_size_smoothing = 50  # Adjust the window size for smoothing as needed
+window_size_smoothing = 100  # Adjust the window size for smoothing as needed
 e_rate_smooth = moving_average(e_rate, window_size_smoothing)
 i_rate_smooth = moving_average(i_rate, window_size_smoothing)
 
@@ -50,7 +50,7 @@ time_values_smooth = time_values[1:length(e_rate_smooth)]
 
 # Filter the data to include only the desired time range (0 ms to 2500 ms)
 start_time = 0
-end_time = 2500
+end_time = 800
 
 filtered_indices = (start_time .<= time_values_smooth .<= end_time)
 time_values_filtered = time_values_smooth[filtered_indices]
@@ -78,7 +78,7 @@ p2 = plot(time_values_filtered, e_rate_filtered,
     left_margin = plot_margin,
     bottom_margin = plot_margin,
     grid = false,
-    ylim = (0, 15),  # Set y-axis limits
+    ylim = (-5, 100),  # Set y-axis limits
     dpi=500,
     foreground_color_legend=nothing)
 
@@ -92,6 +92,6 @@ plot!(time_values_filtered, i_rate_filtered,
 directory_for_plot = "/gpfs/data/doiron-lab/draco/Balanced_Sipiking/plots_for_paper"
 
 # Save the plot as SVG, PDF, and PNG
-savefig(p2, joinpath(directory_for_plot, "plot_fixed.svg"))
-savefig(p2, joinpath(directory_for_plot, "plot_fixed.pdf"))
-savefig(p2, joinpath(directory_for_plot, "plot_fixed.png"))
+savefig(p2, joinpath(directory_for_plot, "plot_periodic.svg"))
+savefig(p2, joinpath(directory_for_plot, "plot_periodic.pdf"))
+savefig(p2, joinpath(directory_for_plot, "plot_periodic.png"))

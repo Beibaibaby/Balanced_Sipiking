@@ -28,7 +28,7 @@ jie=${jie_values[$jie_index]}
 stimstr=${stimstr_values[$stimstr_index]}
 
 # Fixed parameters
-d_ee=0.8
+d_ee=0.3
 f_ee=0.4
 d_ie=0.23
 f_ie=0.3

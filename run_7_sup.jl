@@ -9,7 +9,7 @@ using SharedArrays
 using Measures
 using Distributions
 using SharedArrays
-
+#for periodic the parameters are Dict{String, Real}("ie_sign" => true, "add_noise" => false, "stim_duration" => 20, "T" => 1000, "scale_noise" => 1.0, "d_ee" => 0.15, "Ne" => 4000, "jie_para" => 1.4, "stim_start_2" => 400, "Nstim" => 4000, "stim_start_time" => 100, "jii_para" => -16.0, "c_noise" => 1.0, "pee" => 0.2, "pie" => 0.5, "large_peak_mean" => 300.0, "ee_sign" => true, "d_ie" => 0.25, "f_ee" => 0.3, "corr_flag" => false, "sigma_noise" => 1.0, "f_ie" => 0.3, "Ni" => 1000, "pii" => 0.5, "taui" => 10, "Ncells" => 5000, "taue" => 15, "stim_duration_2" => 200, "jee_para" => 10.0, "jei_para" => -21.599999999999998, "pei" => 0.5, "peak_ratio" => 10000.0, "stimstr_para" => 0.0, "stimstr_2" => 0.0, "K" => 800)
 ENV["GKSwstype"] = "100"  # Use the off-screen GKS terminal to aviod running messages
 
 include("sim_7_sup.jl") # include the network simulation code
@@ -965,10 +965,10 @@ stimstr = parse(Float64, get_arg("--stimstr", "1.0"))
 stim_duration= parse(Int, get_arg("--stim_duration", "20"))
 stim_start_time= parse(Int, get_arg("--stim_start_time", "100"))
 
+#stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
 stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
-stimstr_2 = parse(Float64, get_arg("--stimstr_2", "0.0"))
-stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "200"))
-stim_start_2 = parse(Int, get_arg("--stim_start_2", "400"))
+stim_duration_2 = parse(Int, get_arg("--stim_duration_2 ", "100"))
+stim_start_2 = parse(Int, get_arg("--stim_start_2", "1000"))
 
 event_thre = parse(Float64, get_arg("--event_thre", "0.8"))
 peak_ratio = parse(Float64, get_arg("--peak_ratio", "10000"))

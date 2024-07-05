@@ -13,7 +13,7 @@ using Distributions
 ENV["GKSwstype"] = "100"
 
 # Define the directory and file paths
-directory = "/gpfs/data/doiron-lab/draco/results_sup/exp_sup_11115092/4"
+directory = "/gpfs/data/doiron-lab/draco/results_bistate/exp_bistate_11269608/6"
 e_rate_file = joinpath(directory, "e_rate.jld2")
 i_rate_file = joinpath(directory, "i_rate.jld2")
 
@@ -41,7 +41,7 @@ function moving_average(data, window_size)
 end
 
 # Smooth the data
-window_size_smoothing = 100  # Adjust the window size for smoothing as needed
+window_size_smoothing = 50  # Adjust the window size for smoothing as needed
 e_rate_smooth = moving_average(e_rate, window_size_smoothing)
 i_rate_smooth = moving_average(i_rate, window_size_smoothing)
 
@@ -49,8 +49,8 @@ i_rate_smooth = moving_average(i_rate, window_size_smoothing)
 time_values_smooth = time_values[1:length(e_rate_smooth)]
 
 # Filter the data to include only the desired time range (0 ms to 2500 ms)
-start_time = 1030
-end_time = 2070
+start_time = 0
+end_time = 2000
 
 filtered_indices = (start_time .<= time_values_smooth .<= end_time)
 time_values_filtered = time_values_smooth[filtered_indices]
@@ -63,8 +63,19 @@ time_values_filtered .-= time_values_filtered[1]
 plot_size = (1200, 600)
 plot_margin = 10mm
 
-# Generate the plot
-p2 = plot(time_values_filtered, e_rate_filtered,
+# Define custom colors
+#145, 55, 19
+green_color = RGB(0/255, 201/255,20/255)
+grey_color = RGB(145/255, 55/255, 19/255)
+
+# Function to create a rectangle shape
+rectangle(w, h, x, y) = Shape(x .+ [0, w, w, 0], y .+ [0, 0, h, h])
+
+# Plotting
+plot_size = (1200, 600)
+plot_margin = 10mm
+
+p = plot(time_values_filtered, e_rate_filtered,
     xlabel = "Time (ms)",
     ylabel = "Firing rate (Hz)",
     label = "Excitatory",
@@ -80,20 +91,26 @@ p2 = plot(time_values_filtered, e_rate_filtered,
     left_margin = plot_margin,
     bottom_margin = plot_margin,
     grid = false,
-    ylim = (-5, 100),  # Set y-axis limits
+    ylim = (-5, 200),  # Set y-axis limits
     dpi=500,
+    legend = false,
     foreground_color_legend=nothing)
 
-plot!(time_values_filtered, i_rate_filtered,
+plot!(p, time_values_filtered, i_rate_filtered,
     label = "Inhibitory",
     lw = 3,
     linecolor = blue_color,
     grid = false,
     foreground_color_legend=nothing)
 
+# Adding shaded regions
+plot!(p, rectangle(20, 205, 100, -5), fillcolor=green_color, fillalpha=0.1, seriestype=:shape, legend=false, linecolor=nothing)
+plot!(p, rectangle(100, 205, 1000, -5), fillcolor=grey_color, fillalpha=0.1, seriestype=:shape, legend=false, linecolor=nothing)
+
+# Save the plot
 directory_for_plot = "/gpfs/data/doiron-lab/draco/Balanced_Sipiking/plots_for_paper"
 
 # Save the plot as SVG, PDF, and PNG
-savefig(p2, joinpath(directory_for_plot, "plot_periodic.svg"))
-savefig(p2, joinpath(directory_for_plot, "plot_periodic.pdf"))
-savefig(p2, joinpath(directory_for_plot, "plot_periodic.png"))
+savefig(p, joinpath(directory_for_plot, "plot_bistate.svg"))
+savefig(p, joinpath(directory_for_plot, "plot_bistate.pdf"))
+savefig(p, joinpath(directory_for_plot, "plot_bistate.png"))

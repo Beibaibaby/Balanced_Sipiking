@@ -1,6 +1,7 @@
 #this file is part of litwin-kumar_doiron_cluster_2012
 #Copyright (C) 2014 Ashok Litwin-Kumar
 #see README for more information
+#for periodic the parameters are Dict{String, Real}("ie_sign" => true, "add_noise" => false, "stim_duration" => 20, "T" => 1000, "scale_noise" => 1.0, "d_ee" => 0.15, "Ne" => 4000, "jie_para" => 1.4, "stim_start_2" => 400, "Nstim" => 4000, "stim_start_time" => 100, "jii_para" => -16.0, "c_noise" => 1.0, "pee" => 0.2, "pie" => 0.5, "large_peak_mean" => 300.0, "ee_sign" => true, "d_ie" => 0.25, "f_ee" => 0.3, "corr_flag" => false, "sigma_noise" => 1.0, "f_ie" => 0.3, "Ni" => 1000, "pii" => 0.5, "taui" => 10, "Ncells" => 5000, "taue" => 15, "stim_duration_2" => 200, "jee_para" => 10.0, "jei_para" => -21.599999999999998, "pei" => 0.5, "peak_ratio" => 10000.0, "stimstr_para" => 0.0, "stimstr_2" => 0.0, "K" => 800)
 using Statistics
 using ProgressMeter
 using Plots
